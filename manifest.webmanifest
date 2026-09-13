@@ -1,0 +1,15 @@
+{
+  "name": "دفتر التحضير",
+  "short_name": "التحضير",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef1f5",
+  "theme_color": "#1b4c8c",
+  "icons": [
+    { "src": "icons/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

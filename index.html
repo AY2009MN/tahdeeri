@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دفتر التحضير</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b4c8c">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar no-print">
+  <div class="brand">دفتر التحضير</div>
+  <nav class="tabs">
+    <button class="tab active" data-view="home">الرئيسية</button>
+    <button class="tab" data-view="notebook">الدفتر</button>
+    <button class="tab" data-view="editor">التحضير</button>
+    <button class="tab" data-view="library">الكتب</button>
+    <button class="tab" data-view="settings">الإعدادات</button>
+  </nav>
+  <div class="gradepick">
+    <select id="gradeSel"></select>
+  </div>
+</header>
+
+<!-- ══════════ الرئيسية ══════════ -->
+<section id="view-home" class="view no-print">
+  <div class="hero">
+    <div>
+      <div class="hero-date" id="todayGreg"></div>
+      <div class="hero-sub" id="todayLabel"></div>
+    </div>
+    <div class="hero-stat"><b id="statDone">٠</b><span>حصة محضَّرة</span></div>
+    <div class="hero-stat"><b id="statTotal">٠</b><span>إجمالي الحصص</span></div>
+  </div>
+
+  <h2>حصص اليوم</h2>
+  <div id="todaySessions" class="cards"></div>
+
+  <h2>الأسبوع الحالي</h2>
+  <div id="weekList" class="weekgrid"></div>
+</section>
+
+<!-- ══════════ الدفتر ══════════ -->
+<section id="view-notebook" class="view hidden no-print">
+  <div class="toolbar">
+    <input type="search" id="nbSearch" placeholder="ابحث عن درس…">
+    <select id="nbFilter">
+      <option value="all">كل الحصص</option>
+      <option value="done">المحضَّرة</option>
+      <option value="todo">غير المحضَّرة</option>
+    </select>
+    <button id="btnPrintWeek" class="btn">طباعة أسبوع…</button>
+  </div>
+  <div id="nbList"></div>
+</section>
+
+<!-- ══════════ محرّر التحضير ══════════ -->
+<section id="view-editor" class="view hidden">
+  <div class="toolbar no-print" id="editorBar">
+    <button class="btn" id="prevSes">‹ السابقة</button>
+    <span id="sesLabel" class="ses-label"></span>
+    <button class="btn" id="nextSes">التالية ›</button>
+    <span class="spacer"></span>
+    <label class="fs">مقاس الخط <select id="fsSel"><option>12</option><option selected>14</option><option>16</option><option>18</option></select></label>
+    <span id="saveState" class="savestate">محفوظ</span>
+    <button class="btn primary" id="btnCrop" title="انقر أولاً داخل المقدمة أو العرض ثم اختر اللقطة من صفحات الدرس">📷 إدراج من الكتاب</button>
+    <label class="btn">إدراج صورة<input type="file" id="imgFile" accept="image/*" hidden></label>
+    <button class="btn" id="btnWorksheet">ورقة العمل</button>
+    <button class="btn primary" id="btnPrint">معاينة وطباعة</button>
+  </div>
+  <div id="paper"></div>
+</section>
+
+<!-- ══════════ المكتبة ══════════ -->
+<section id="view-library" class="view hidden no-print">
+  <div class="toolbar">
+    <label class="btn primary">أضِف ملف PDF<input type="file" id="bookFile" accept="application/pdf" hidden></label>
+    <span class="hint">كتاب الطالب · دليل المعلّم · خطة التوزيع · أيّ ملف تحتاجه أثناء التحضير.</span>
+  </div>
+  <div id="bookList" class="cards"></div>
+</section>
+
+<!-- ══════════ الإعدادات ══════════ -->
+<section id="view-settings" class="view hidden no-print">
+  <h2>بيانات الورقة</h2>
+  <div class="grid2">
+    <label>اسم المعلم <input id="stTeacher" placeholder="اختياري"></label>
+    <label>اسم المدرسة <input id="stSchool" placeholder="اختياري"></label>
+    <label>العام الدراسي <input id="stYear" value="٢٠٢٦/٢٠٢٧"></label>
+    <label>الفصل الدراسي <input id="stTerm" value="الأول"></label>
+  </div>
+
+  <h2>عناصر القالب</h2>
+  <p class="hint">أزِل أيّ عنصر لا تحتاجه من ورقة التحضير ـ يختفي من الشاشة والطباعة معاً.</p>
+  <div id="sectionsBox" class="toolbar"></div>
+
+  <h2>توزيع التواريخ</h2>
+  <div class="grid2">
+    <label>تاريخ أول حصة <input type="date" id="stStart" value="2026-09-15"></label>
+    <label>آخر يوم في الفصل <input type="date" id="stEnd" value="2026-12-31"></label>
+  </div>
+
+  <h3>جدول الحصص الأسبوعي</h3>
+  <p class="hint">حدّد لكل صف أيام حصصه ورقم الحصة. يمكنك تغييره لاحقاً وإعادة التوليد.</p>
+  <div id="timetable"></div>
+
+  <h3>العطل والإجازات</h3>
+  <div class="toolbar">
+    <input type="date" id="holDate">
+    <input id="holLabel" placeholder="مناسبة العطلة">
+    <button class="btn" id="addHol">إضافة</button>
+  </div>
+  <ul id="holList" class="hol"></ul>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btnGenerate">توليد تواريخ الفصل</button>
+    <button class="btn" id="btnExport" title="التحضيرات واللقطات والإعدادات">تصدير ملف النقل</button>
+    <button class="btn" id="btnExportBooks" title="ملف أكبر يضمّ كتب PDF أيضاً">تصدير مع الكتب</button>
+    <label class="btn">استيراد ملف نقل<input type="file" id="impFile" accept=".daftar,.json,application/json" hidden></label>
+  </div>
+  <p class="hint" id="genMsg"></p>
+</section>
+
+<!-- ══════════ عارض الدرس مع الالتقاط ══════════ -->
+<div id="viewer" class="hidden no-print">
+  <div class="vbar">
+    <button class="btn" id="vClose" title="إغلاق العارض">✕</button>
+    <span id="vTitle" class="vtitle"></span>
+    <span class="spacer"></span>
+    <button class="btn" id="vZout" title="تصغير">−</button>
+    <button class="btn" id="vZin" title="تكبير">+</button>
+  </div>
+  <div class="vbar2">
+    <label>الدرس <select id="vLesson"></select></label>
+    <span class="vmeta" id="vRange"></span>
+    <button class="btn sm" id="vAll">كل الكتاب</button>
+    <label class="vgo">صفحة <input type="number" id="vPageNo" min="1"><button class="btn sm" id="vGo">اذهب</button></label>
+    <span class="spacer"></span>
+    <button class="btn sm" id="vSetFrom" title="اجعل الصفحة الظاهرة بداية هذا الدرس">بداية الدرس هنا</button>
+    <button class="btn sm" id="vSetTo" title="اجعل الصفحة الظاهرة نهاية هذا الدرس">نهاية الدرس هنا</button>
+  </div>
+  <div class="vbar3">
+    <span class="vtool">التحديد:
+      <button class="btn sm primary" id="vModeRect">▭ منتظم</button>
+      <button class="btn sm" id="vModeFree">✎ حرّ</button>
+    </span>
+    <span class="vmeta" id="vTarget"></span>
+    <span id="vFallback" class="hidden">
+      <label>الحصة <select id="vSes"></select></label>
+      <label>الموضع <select id="vSlot"></select></label>
+      <button class="btn sm" id="vText">أضف نصّاً</button>
+    </span>
+  </div>
+  <div id="vPages"></div>
+  <div id="vShot" class="hidden">
+    <img id="vShotImg" alt="">
+    <label class="vlbl"><input type="checkbox" id="vClean" checked> تفريغ الخلفية</label>
+    <input id="vLabel" type="hidden">
+    <button class="btn primary" id="vShotOk">إدراج</button>
+    <button class="btn" id="vShotCancel">إعادة التحديد</button>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script src="js/curriculum8.js"></script>
+<script src="js/curriculum9.js"></script>
+<script src="js/db.js"></script>
+<script src="js/figs.js"></script>
+<script src="js/inline.js"></script>
+<script src="js/bookmap.js"></script>
+<script src="js/books.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

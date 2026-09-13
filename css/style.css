@@ -1,0 +1,327 @@
+/* ===== دفتر التحضير — التنسيق العام + ورقة A4 مطابقة للفورمة الرسمية ===== */
+:root{
+  --blue:#1b4c8c; --red:#c00000; --green:#12695e;
+  --ink:#111; --line:#000; --grayfill:#d9d9d9; --bg:#eef1f5; --card:#fff;
+  --font:"Cairo","Segoe UI","Tahoma",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px}
+.hidden{display:none!important}
+h2{font-size:17px;margin:18px 12px 8px}
+h3{font-size:15px;margin:14px 12px 6px}
+.hint{color:#5a6472;font-size:13px;margin:4px 12px}
+.spacer{flex:1}
+
+/* ── الشريط العلوي ── */
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;
+  background:var(--blue);color:#fff;padding:8px 12px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:17px}
+.tabs{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+.tab{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;
+  padding:6px 12px;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer}
+.tab.active{background:#fff;color:var(--blue);font-weight:700}
+.gradepick select{padding:6px 10px;border-radius:8px;border:0;font-family:inherit;font-size:14px}
+
+/* ── الرئيسية ── */
+.hero{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  background:var(--card);margin:12px;padding:14px 16px;border-radius:12px;box-shadow:0 1px 4px #0001}
+.hero-date{font-size:20px;font-weight:700;color:var(--blue)}
+.hero-sub{color:#5a6472;font-size:13px;margin-top:2px}
+.hero-stat{margin-inline-start:auto;text-align:center;min-width:92px}
+.hero-stat b{display:block;font-size:22px;color:var(--blue)}
+.hero-stat span{font-size:12px;color:#5a6472}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:0 12px}
+.card{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 1px 4px #0001;cursor:pointer;
+  border-inline-start:4px solid var(--blue)}
+.card.done{border-inline-start-color:var(--green)}
+.card b{display:block;font-size:14px;margin-bottom:4px}
+.card small{color:#5a6472;font-size:12px;display:block}
+.weekgrid{display:grid;gap:8px;margin:0 12px 24px}
+.wrow{background:var(--card);border-radius:8px;padding:8px 12px;display:flex;gap:10px;
+  align-items:center;cursor:pointer;font-size:14px}
+.wrow .d{color:var(--blue);font-weight:700;min-width:96px}
+.wrow .t{flex:1}
+.wrow .s{font-size:12px;color:#5a6472}
+
+/* ── أدوات ── */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 12px}
+.btn{background:#fff;border:1px solid #c7cedb;border-radius:8px;padding:7px 13px;
+  font-family:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn:hover{filter:brightness(.97)}
+input,select{font-family:inherit;font-size:14px;padding:7px 9px;border:1px solid #c7cedb;border-radius:8px;background:#fff}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:0 12px}
+.grid2 label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#42505f}
+.ses-label{font-weight:700;font-size:14px}
+.savestate{font-size:12px;color:var(--green)}
+.savestate.dirty{color:#b06f00}
+ul.hol{margin:0 12px;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+ul.hol li{background:#fff;border-radius:6px;padding:4px 9px;font-size:13px;display:flex;gap:6px;align-items:center}
+ul.hol button{border:0;background:transparent;color:var(--red);cursor:pointer;font-size:15px}
+
+/* ── قائمة الدفتر ── */
+.nbunit{margin:12px}
+.nbunit>h4{margin:0 0 6px;font-size:15px;color:var(--blue)}
+.nbrow{background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:5px;display:flex;
+  gap:10px;align-items:center;cursor:pointer;font-size:14px}
+.nbrow .n{background:var(--blue);color:#fff;border-radius:6px;min-width:30px;text-align:center;
+  font-size:12px;padding:2px 4px}
+.nbrow.done .n{background:var(--green)}
+.nbrow .t{flex:1}
+.nbrow .dt{font-size:12px;color:#5a6472;min-width:110px}
+
+/* ═══════════════ ورقة A4 ═══════════════ */
+#paper{padding:14px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.sheet{width:210mm;min-height:297mm;background:#fff;padding:10mm 11mm 10mm 11mm;
+  box-shadow:0 2px 12px #0002;font-size:var(--sheetfs,14px);line-height:1.6;display:flex;flex-direction:column}
+.sheet table{width:100%;border-collapse:collapse;table-layout:fixed}
+.sheet td,.sheet th{border:1px solid var(--line);padding:2px 4px;vertical-align:middle}
+.lbl{background:var(--grayfill);font-weight:700;text-align:center;font-size:.93em}
+.val{text-align:center;color:var(--red);font-weight:700}
+.valb{text-align:center;color:var(--blue);font-weight:700}
+.hdrwrap{display:flex;gap:4mm;align-items:flex-start}
+.hdrwrap table{flex:0 0 64%}
+.logobox{flex:1;border:1px solid transparent;display:flex;align-items:center;justify-content:center;
+  min-height:26mm}
+.logobox img{max-width:100%;max-height:26mm}
+.secttl{background:var(--grayfill);border:1px solid var(--line);border-bottom:0;
+  font-weight:700;text-align:center;padding:2px;font-size:.95em}
+.sectbox{border:1px solid var(--line);padding:3mm;outline:none;min-height:14mm}
+.sectbox:focus{background:#fbfdff;box-shadow:inset 0 0 0 2px #1b4c8c22}
+.sect{margin-top:2.5mm;display:flex;flex-direction:column}
+.sect.grow{flex:1}
+.sect.grow .sectbox{flex:1}
+.cellin{outline:none;min-height:1.4em}
+.cellin:focus{background:#fbfdff}
+.sign{margin-top:3mm;text-align:left;font-weight:700}
+.overflowwarn{border-bottom:3px solid var(--red)!important}
+
+/* ── ورقة العمل: ٤ نسخ في A4 ── */
+.wsheet{width:210mm;height:297mm;background:#fff;box-shadow:0 2px 12px #0002;
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:0}
+.wcell{border:1px dashed #888;padding:7mm 6mm;display:flex;flex-direction:column;font-size:10.5pt}
+.wcell h5{margin:0 0 2mm;font-size:11pt;color:var(--blue);text-align:center}
+.wcell .meta{font-size:8.5pt;color:#444;margin-bottom:2mm;display:flex;justify-content:space-between}
+.wcell ol{margin:0;padding-inline-start:6mm;list-style:arabic-indic}
+.wcell li{margin-bottom:3mm;white-space:pre-wrap}
+.wcell .nameline{margin-top:auto;font-size:9pt;border-top:1px solid #bbb;padding-top:1.5mm}
+
+/* ═══════════════ الطباعة ═══════════════ */
+@page{size:A4;margin:0}
+@media print{
+  html,body{background:#fff}
+  .no-print,.topbar,.view:not(#view-editor){display:none!important}
+  #paper{padding:0;gap:0}
+  .sheet,.wsheet{box-shadow:none;margin:0;page-break-after:always;width:210mm}
+  .sheet:last-child,.wsheet:last-child{page-break-after:auto}
+  .wcell{border:1px dashed #aaa}
+}
+/* على الشاشات الأضيق من ورقة A4 تُعرض الورقة بعرض الشاشة حتى تبقى كاملة أمامك،
+   بينما تبقى الطباعة دائماً بمقاس A4 الحقيقي (انظر @media print أعلاه). */
+@media screen and (max-width:1000px){
+  #paper{padding:8px}
+  .sheet,.wsheet{width:100%;max-width:100%;min-width:0;padding:6mm}
+  .sheet{min-height:auto}
+  .wsheet{height:auto;min-height:60vh}
+}
+
+/* ── شريط تنبيه (يظهر مثلاً عند فتح الملف مباشرة بلا خادم) ── */
+.banner{margin:10px 12px;padding:11px 14px;border-radius:10px;font-size:14px;line-height:1.7;
+  background:#fff6e5;border:1px solid #e6b45a;color:#6a4a10}
+.banner.err{background:#fdecec;border-color:#e08080;color:#7a1c1c}
+.banner code{background:#00000010;padding:1px 6px;border-radius:5px;font-family:inherit;font-weight:700}
+
+/* صور الأمثلة المقصوصة من الكتاب */
+.figs{display:flex;flex-direction:column;gap:2mm;margin:2mm 0}
+.figs img{max-width:100%;border:1px solid #ccc;border-radius:3px}
+.figcap{font-size:.82em;color:#555;text-align:center}
+.fs{font-size:12px;color:#fff;display:flex;align-items:center;gap:4px}
+.fs select{padding:3px 6px;border-radius:6px;border:0;font-family:inherit}
+.banner-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* ── تنسيقات داخل أقسام الورقة (مستوحاة من نموذج التحضير المحترف) ── */
+.mini{color:var(--blue);font-weight:700;margin:1.5mm 0 .8mm}
+.deftag{background:#fff6a8;padding:0 2px;border-radius:2px}
+.chip{display:inline-block;background:#1b4c8c;color:#fff;border-radius:4px;
+  padding:0 6px;font-size:.82em;font-weight:700;margin-inline-start:6px;vertical-align:middle}
+.chip.v2{background:#12695e}
+.chip.v3{background:#9a4b00}
+.ref{color:var(--red);font-weight:700}
+.notebox{border:1px solid #8fb4d9;border-radius:5px;overflow:hidden;margin:1.5mm 0}
+.notebox > b{display:block;background:linear-gradient(90deg,#c2417a,#e0685f);color:#fff;
+  padding:1px 8px;font-size:.9em}
+.notebox > div{background:#eaf4fd;padding:1.5mm 3mm}
+.notebox ul{margin:0;padding-inline-start:5mm}
+.alert{color:var(--red);font-weight:700}
+
+/* ── صور الأمثلة : المواضع ولوحة التحكّم ── */
+.sect{position:relative}
+figure.fig{margin:0;position:relative;display:block}
+figure.fig img{display:block;width:100%;height:auto}
+figure.fig.sel{outline:2px dashed #1b4c8c;outline-offset:2px}
+figure.fig.free{position:absolute}
+.fighandle{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;
+  border:1px solid #9ab;background:#fff;color:#1b4c8c;cursor:grab;font-size:13px;line-height:1;opacity:.55}
+figure.fig:hover .fighandle{opacity:1}
+
+#paper.dropping{outline:3px dashed #1b4c8c;outline-offset:-6px}
+@media print{ .figpanel,.fighandle{display:none!important} figure.fig.sel{outline:none} }
+
+/* ── المكتبة ── */
+.bookcard{background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 4px #0001;
+  border-inline-start:4px solid #12695e;display:flex;flex-direction:column;gap:6px}
+.bookcard b{font-size:14px}
+.bookcard small{color:#5a6472;font-size:12px}
+.bookcard .row{display:flex;gap:6px}
+
+/* ── عارض PDF ── */
+
+
+/* ── صندوق العرض : الإطار يحيط بالنصّ والصور معاً فلا يخرج شيء عن حدود الورقة ── */
+.sectwrap{border:1px solid var(--line);padding:3mm;flex:1;display:flex;flex-direction:column;
+  overflow:hidden;position:relative;min-height:14mm}
+.sectbox.nb{border:0;padding:0;min-height:0;flex:0 0 auto}
+.sectwrap .figs{margin-top:2mm;flex:0 0 auto;min-height:0}
+.sectwrap figure.fig img{max-height:none}
+
+
+
+/* ═══ ترتيب الصور داخل صندوق العرض ═══
+   الأوضاع «عادي / يمين / يسار» تصطفّ رأسياً ولا تتراكب أبداً :
+   كل صورة عنصر مرن يتقلّص بنسبة حجمه حتى تتّسع المجموعة للصندوق،
+   و object-fit: contain يحفظ النسبة فلا تتشوّه ولا تُقصّ.
+   التراكب متاح فقط في الوضع «حرّ» مع التحكّم بترتيب الطبقات. */
+.sectwrap .figs{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  gap:2mm;align-items:center;width:100%;overflow:visible}
+.sectwrap figure.fig{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  align-items:center;max-width:100%}
+.sectwrap figure.fig img{flex:1 1 auto;min-height:0;width:auto;max-width:100%;
+  object-fit:contain;object-position:center}
+.sectwrap figure.fig figcaption{flex:0 0 auto}
+/* الوضع الحرّ : طبقات فوق بعضها كما في برامج التصميم */
+.sectwrap figure.fig.free{position:absolute;flex:0 0 auto}
+.sectwrap figure.fig.free img{flex:0 0 auto;width:100%;max-height:none}
+.fv2{font-size:11px;color:#6b7684}
+
+/* ═══ واجهة تحرير الصورة : شريط علوي + مقابض على الأطراف ═══ */
+figure.fig.sel{outline:1.5px solid #1b4c8c;outline-offset:1px}
+figure.fig.fixed img{object-fit:fill;height:100%}
+
+/* الشريط فوق الصورة */
+.figbar{position:absolute;bottom:100%;margin-bottom:7px;inset-inline-start:0;z-index:40;
+  display:flex;flex-wrap:wrap;gap:5px;align-items:center;background:#16324f;color:#fff;
+  padding:4px 6px;border-radius:8px;box-shadow:0 3px 12px #0004;cursor:default;max-width:100%}
+.figbar .fgrp{display:flex;gap:2px;align-items:center;
+  background:#ffffff1a;border-radius:6px;padding:2px}
+.figbar .fb{border:0;background:transparent;color:#fff;border-radius:5px;
+  min-width:24px;height:22px;padding:0 5px;font-size:13px;line-height:1;cursor:pointer;font-family:inherit}
+.figbar .fb:hover{background:#ffffff33}
+.figbar .fb.on{background:#fff;color:#16324f;font-weight:700}
+.figbar .fv{font-size:11px;color:#dbe6f2;padding:0 4px;min-width:34px;text-align:center}
+.figcolors{flex-basis:100%;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;padding:3px 2px 1px}
+.figcolors label{display:flex;align-items:center;gap:5px;font-size:10.5px;color:#dbe6f2}
+.figcolors input{flex:1;height:14px}
+
+/* المقابض */
+.fh{position:absolute;width:11px;height:11px;background:#fff;border:1.5px solid #1b4c8c;
+  border-radius:2px;z-index:35;box-shadow:0 1px 3px #0003}
+.fh.nw{top:-6px;inset-inline-start:-6px;cursor:nwse-resize}
+.fh.ne{top:-6px;inset-inline-end:-6px;cursor:nesw-resize}
+.fh.sw{bottom:-6px;inset-inline-start:-6px;cursor:nesw-resize}
+.fh.se{bottom:-6px;inset-inline-end:-6px;cursor:nwse-resize}
+.fh.n{top:-6px;inset-inline-start:50%;margin-inline-start:-5px;cursor:ns-resize}
+.fh.s{bottom:-6px;inset-inline-start:50%;margin-inline-start:-5px;cursor:ns-resize}
+.fh.e{top:50%;margin-top:-5px;inset-inline-end:-6px;cursor:ew-resize}
+.fh.w{top:50%;margin-top:-5px;inset-inline-start:-6px;cursor:ew-resize}
+.fh.rot{bottom:-28px;inset-inline-start:50%;margin-inline-start:-7px;width:15px;height:15px;
+  border-radius:50%;cursor:grab;background:#1b4c8c;border-color:#fff}
+.fh.rot::after{content:'⟳';position:absolute;inset:0;color:#fff;font-size:11px;
+  display:flex;align-items:center;justify-content:center}
+
+@media print{ .figbar,.fh,.fighandle{display:none!important} figure.fig.sel{outline:none} }
+
+/* ═══ عارض الدرس ═══ */
+#viewer{position:fixed;inset:0;z-index:100;background:#20262e;display:flex;flex-direction:column}
+#viewer.hidden{display:none}
+.vbar,.vbar2{display:flex;gap:8px;align-items:center;padding:7px 12px;flex-wrap:wrap}
+.vbar{background:#16324f;color:#fff}
+.vbar2{background:#1d3f61;color:#dbe6f2;font-size:13px}
+.vbar2 label{display:flex;align-items:center;gap:5px}
+.vbar2 select{padding:4px 7px;border-radius:6px;border:0;font-family:inherit;font-size:13px}
+.vtitle{font-weight:700;font-size:14px}
+.vmeta{font-size:12.5px;color:#b9cbdd}
+.vhint{color:#c9d6e5;font-size:12.5px;margin:7px 12px 0;text-align:center}
+#vPages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.vpagewrap{position:relative;line-height:0}
+canvas.vpage{background:#fff;box-shadow:0 3px 16px #0006;max-width:none;display:block}
+#viewer.capturing canvas.vpage{cursor:crosshair}
+.vsel{position:absolute;border:2px dashed #ffd34d;background:#ffd34d22;pointer-events:none}
+#vShot{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;
+  padding:10px;background:#16324f;color:#fff}
+#vShot.hidden{display:none}
+.vlbl{display:flex;align-items:center;gap:6px;font-size:13px}
+.vlbl input[type=text],#vLabel{padding:5px 8px;border-radius:6px;border:0;font-family:inherit;min-width:230px}
+.rowlbl{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#42505f}
+.rowlbl select{flex:1;font-size:12.5px;padding:4px 6px}
+
+/* ═══ عارض الدرس : أشرطة إضافية + تحديد حرّ + جانبي ═══ */
+.btn.sm{padding:4px 9px;font-size:12.5px;border-radius:7px}
+.vbar3{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 12px;background:#244b72;color:#dbe6f2;font-size:13px}
+.vbar3 label,.vgo{display:flex;align-items:center;gap:5px}
+.vbar3 select{padding:3px 6px;border-radius:6px;border:0;font-family:inherit;font-size:12.5px}
+.vgo input{width:64px;padding:3px 6px;border-radius:6px;border:0;font-family:inherit}
+.vtool{display:flex;align-items:center;gap:5px}
+#vTarget b{color:#ffd34d}
+.vpagewrap{position:relative;line-height:0;background:#fff;box-shadow:0 3px 16px #0006;flex:0 0 auto}
+.vpno{position:absolute;top:6px;inset-inline-start:6px;background:#16324fcc;color:#fff;font-size:11px;line-height:1.6;
+  padding:0 7px;border-radius:9px;z-index:2;pointer-events:none}
+svg.vlasso{position:absolute;inset:0;pointer-events:none}
+svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray:6 4}
+#viewer.capturing canvas.vpage{cursor:crosshair;touch-action:none}
+#vShot img{max-height:90px;max-width:40%;background:#fff;border-radius:4px;box-shadow:0 1px 6px #0006}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#12695e;color:#fff;padding:9px 18px;
+  border-radius:22px;font-size:14px;z-index:300;box-shadow:0 4px 18px #0004;transition:opacity .4s}
+.toast.out{opacity:0}
+/* على الشاشات العريضة: العارض يسار الورقة ، والتحضير يبقى ظاهراً للإدراج المباشر */
+@media screen and (min-width:1100px){
+  body.viewing #viewer{inset:0 auto 0 0;width:min(50vw,900px);box-shadow:4px 0 22px #0005}
+  body.viewing #view-editor{margin-left:min(50vw,900px)}
+  body.viewing .topbar{margin-left:min(50vw,900px)}
+  body.viewing #paper .sheet{zoom:.86}
+}
+
+/* ═══ الصور داخل النصّ + مواضع الإدراج ═══ */
+.sectbox .gap{height:1.2mm}
+.inlrow{display:flex;justify-content:center;align-items:flex-start;gap:2%;flex-wrap:wrap;margin:1.2mm 0;line-height:0}
+.inl{display:inline-block;position:relative;vertical-align:top;line-height:0;cursor:pointer;max-width:100%}
+.inl img{width:100%;height:auto;display:block;border-radius:2px}
+.inlrow:has(> .inl:only-child .al-r),.inlrow:has(> .inl.al-r:only-child){justify-content:flex-start}
+.inlrow:has(> .inl.al-l:only-child){justify-content:flex-end}
+.inl.sel{outline:2px solid #1b4c8c;outline-offset:2px}
+.inlbar{position:absolute;bottom:100%;margin-bottom:6px;inset-inline-start:0;z-index:45;display:flex;gap:2px;align-items:center;
+  background:#16324f;color:#fff;border-radius:8px;padding:3px 5px;box-shadow:0 3px 12px #0004;line-height:1;white-space:nowrap}
+.inlbar button{border:0;background:transparent;color:#fff;min-width:24px;height:24px;border-radius:5px;cursor:pointer;font:13px/1 var(--font)}
+.inlbar button:hover{background:#ffffff30}
+.inlbar button.on{background:#fff;color:#16324f}
+.inlbar span{font-size:11px;min-width:34px;text-align:center;color:#dbe6f2}
+.inlbar i{width:1px;height:16px;background:#ffffff40;margin:0 3px}
+.inlh{position:absolute;left:-7px;bottom:-7px;width:14px;height:14px;background:#fff;border:2px solid #1b4c8c;border-radius:50%;cursor:nesw-resize;z-index:44}
+.inllbl{display:block;color:var(--blue);font-weight:700;line-height:1.6}
+.slot{display:inline-flex;align-items:center;gap:4px;border:1.5px dashed #1b4c8c;background:#eef5fd;color:#1b4c8c;
+  border-radius:6px;padding:0 8px;margin:.6mm 0;font-weight:700;cursor:pointer;line-height:1.7;font-size:.92em}
+.slot:hover{background:#dcebfb}
+.tm{display:inline-block;background:#fff3d6;color:#8a5a00;border:1px solid #f0c36a;border-radius:10px;
+  padding:0 7px;font-size:.78em;font-weight:700;margin-inline-start:6px;vertical-align:middle;line-height:1.5}
+@media print{
+  .inlbar,.inlh{display:none!important}
+  .inl.sel{outline:none}
+  .slot{border-style:dotted;background:none}
+}
+
+/* نصّ مع الصورة */
+.figrow{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;width:100%}
+.figrow.side{flex-direction:row;align-items:center;gap:3mm}
+.figrow img{min-height:0}
+.figrow.side img{flex:1 1 auto}
+.figlabel{font-weight:700;color:#1b4c8c;margin-bottom:1mm;text-align:center}
+.figlabel.side{flex:0 0 34%;text-align:start;margin:0}
