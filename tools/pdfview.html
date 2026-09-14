@@ -17,9 +17,13 @@ lib.GlobalWorkerOptions.workerSrc = '../vendor/pdf.worker.mjs';
 const q = new URLSearchParams(location.search);
 const docs = {};
 // نجلب الملف كاملاً بأنفسنا ثم نمرّره بيانات ، فلا تتدخّل طلبات المدى أو عارض المتصفح
-const open = f => docs[f] ||= fetch('/__src/' + encodeURIComponent(f)).then(async r => {
+const open = f => docs[f] ||= fetch('/__b64/' + encodeURIComponent(f)).then(async r => {
   if (!r.ok) throw new Error('HTTP ' + r.status + ' لـ ' + f);
-  return new Uint8Array(await r.arrayBuffer());
+  const txt = await r.text();
+  if (!txt.length) throw new Error('نصّ فارغ لـ ' + f);
+  const bin = atob(txt), data = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) data[i] = bin.charCodeAt(i);
+  return data;
 }).then(data => lib.getDocument({ data,
   cMapUrl: '../vendor/cmaps/', cMapPacked: true, standardFontDataUrl: '../vendor/standard_fonts/',
   disableFontFace: q.get('ff') !== '1', useSystemFonts: false, fontExtraProperties: true }).promise);

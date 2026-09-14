@@ -43,8 +43,10 @@ function renderRich(text) {
       return `<div class="notebox"><b>${esc(head)}</b><div><ul>${
         parts.map(p => `<li>${mathWrap(esc(p))}</li>`).join('')}</ul></div></div>`;
     }
-    if (/^##/.test(raw)) return `<div class="mini">${mathWrap(esc(raw.replace(/^##\s*/,'')))}</div>`;
+    if (/^##/.test(raw)) return `<div class="mini">${mathWrap(esc(raw.replace(/^##\s*/,''))).replace(/\{\{([^}]+)\}\}/g, '<span class="tm">$1</span>')}</div>`;
     if (/^>>/.test(raw)) return `<div class="alert">${mathWrap(esc(raw.replace(/^>>\s*/,'')))}</div>`;
+    // زمن البند {{٥ د}} يُعالَج قبل وسوم المهارات {…} حتى لا تبتلعه
+    l = l.replace(/\{\{([^}]+)\}\}/g, '<span class="tm">$1</span>');
     l = l.replace(/==([^=]+)==/g, '<span class="deftag">$1</span>');
     l = l.replace(/\{([^}]+)\}/g, (m, t) =>
       `<span class="chip ${CHIPS[t.trim()] ?? ''}">${esc(t.trim())}</span>`);

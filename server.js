@@ -2,6 +2,7 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 const root = __dirname, PORT = +process.env.PORT || 8080;
 const src = path.dirname(root);            // مجلد الكتب (للتطوير المحلي فقط)
+const b64Cache = {};
 const types = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
   '.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8',
   '.webmanifest':'application/manifest+json; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml',
@@ -24,6 +25,16 @@ http.createServer((req, res) => {
       res.writeHead(200); res.end('ok');
     });
     return;
+  }
+
+  /* أدوات التطوير: الكتاب نفسه بصيغة base64 نصّية (المتصفح بلا واجهة يُفرغ الاستجابات الثنائية) */
+  if (u.startsWith('/__b64/')) {
+    const fp = path.join(src, u.slice(6));
+    if (!fp.startsWith(src) || !fs.existsSync(fp)) { res.writeHead(404); return res.end(); }
+    b64Cache[fp] ||= fs.readFileSync(fp).toString('base64');
+    const body = Buffer.from(b64Cache[fp], 'ascii');
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=us-ascii', 'Content-Length': body.length, 'Cache-Control': 'no-store' });
+    return res.end(body);
   }
 
   let base = root;
