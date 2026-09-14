@@ -158,11 +158,26 @@ function generateDates() {
   return report;
 }
 
-async function persistSessions() {
+/** auto = توليد تلقائي عند الإقلاع (لا يُختم بوقت ، فلا يمحو حالة «محضَّرة» القادمة من جهاز آخر) */
+async function persistSessions(auto) {
   for (const gid of Object.keys(sessionsIdx))
-    for (const s of sessionsIdx[gid])
-      await DB.put('sessions', { id: s.id, date: s.date || null, period: s.period || null, status: s.status || 'planned' });
+    for (const s of sessionsIdx[gid]) {
+      const row = { id: s.id, date: s.date || null, period: s.period || null, status: s.status || 'planned' };
+      await (auto ? DB.putRaw('sessions', { ...row, ts: 0 }) : DB.put('sessions', row));
+    }
 }
+
+/** بعد وصول تعديلات من جهاز آخر: إعادة تحميل البيانات وتحديث الشاشة المفتوحة */
+window.reloadFromDB = async function () {
+  S = (await DB.get('settings', 'app')) || S;
+  prepCache = {};
+  (await DB.all('preps')).forEach(p => prepCache[p.id] = p);
+  await loadSessions();
+  const typing = document.activeElement && document.activeElement.closest('#paper [contenteditable]');
+  const v = document.querySelector('.view:not(.hidden)');
+  if (!v || typing || saveTimer) return;
+  show(v.id.replace('view-', ''));
+};
 
 async function loadSessions() {
   const rows = await DB.all('sessions');
@@ -347,6 +362,7 @@ function markDirty(s) {
   st.textContent = 'جارٍ الحفظ…'; st.classList.add('dirty');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
+    saveTimer = null;
     await DB.put('preps', prepCache[s.id]);
     s.status = 'prepped';
     await DB.put('sessions', { id: s.id, date: s.date, period: s.period, status: 'prepped' });
@@ -551,6 +567,7 @@ function renderSettings() {
     </div>`).join('');
 
   renderSections();
+  Sync.renderPanel();
   document.getElementById('holList').innerHTML = S.holidays.map((h,i) =>
     `<li>${fmtDate(h.date)} ـ ${esc(h.label||'عطلة')} <button data-hol="${i}">×</button></li>`).join('')
     || '<li class="hint">لا عطل مضافة.</li>';
@@ -599,7 +616,8 @@ function banner(html, kind) {
 async function start() {
   for (const gid of Object.keys(CURRICULA)) sessionsIdx[gid] = flatten(gid);
 
-  S = (await DB.get('settings', 'app')) || { ...DEFAULTS };
+  const saved = await DB.get('settings', 'app');
+  S = saved || { ...DEFAULTS, ts: 0 };
   S.timetable ||= DEFAULTS.timetable; S.holidays ||= [];
   // ترحيل: جدول الحصص المعتمد لهذا العام يستبدل أيّ جدول قديم محفوظ ويعيد توليد التواريخ
   const ttMigrate = (S.ttVersion || 0) < DEFAULTS.ttVersion;
@@ -607,11 +625,12 @@ async function start() {
     S.timetable = JSON.parse(JSON.stringify(DEFAULTS.timetable));
     S.start = DEFAULTS.start; S.ttVersion = DEFAULTS.ttVersion;
   }
-  await DB.put('settings', S);
+  // الإعدادات الافتراضية والترحيل لا يُعدّان تعديلاً ـ حتى لا يطغيا على إعداداتك في جهاز آخر عند المزامنة
+  if (!saved || ttMigrate) await DB.putRaw('settings', S);
 
   (await DB.all('preps')).forEach(p => prepCache[p.id] = p);
   await loadSessions();
-  if (ttMigrate) { generateDates(); await persistSessions(); }
+  if (ttMigrate) { generateDates(); await persistSessions(true); }
 
   const gs = document.getElementById('gradeSel');
   gs.innerHTML = Object.keys(CURRICULA).map(g =>
@@ -619,7 +638,7 @@ async function start() {
   gs.value = grade;
 
   // لو لم تولَّد التواريخ بعد، ولّدها تلقائياً من ١٥/٩/٢٠٢٦
-  if (!sessionsIdx[grade].some(s => s.date)) { generateDates(); await persistSessions(); }
+  if (!sessionsIdx[grade].some(s => s.date)) { generateDates(); await persistSessions(true); }
 
   /* الأحداث */
   document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(t.dataset.view));
@@ -722,6 +741,7 @@ async function start() {
     navigator.serviceWorker.register('sw.js').catch(()=>{});
 
   show('home');
+  Sync.init();
 
   // تنبيه إن كان التطبيق يعمل بلا حفظ دائم (فُتح الملف مباشرة بدل تشغيل الخادم)
   if (DB.noStore) {
