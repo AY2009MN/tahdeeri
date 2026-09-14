@@ -102,7 +102,7 @@ function slotify(text) {
     if (!hit) { out.push(t); continue; }
     const cut = t.search(/\s*:\s/);
     const label = (cut > 0 && cut < 40 ? t.slice(0, cut) : t).trim();
-    out.push(`[[slot:${label}]] {{${ar(hit[1])} د}}`);
+    out.push(`[[slot:${label}]]`);
   }
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
@@ -133,33 +133,45 @@ function flatten(gid) {
 /** محضَّرة: جاهزة في المنهج أو عدّلها المعلّم */
 const isDone = s => s.ready || s.status === 'prepped';
 
-/* ────────── توليد التواريخ ────────── */
-function generateDates() {
+/* ────────── الصفوف والشعب ──────────
+   S.classes = [{ id, g: '8'|'9', name: '٨/١', tt: [{d,p}] }] ـ لكل شعبة جدولها وتواريخها ،
+   والتحضير نفسه مشترك بين شعب الصف الواحد. الشعبة المختارة تظهر في رأس الورقة وتواريخها. */
+const curClass = () => (S.classes || []).find(c => c.id === S.cls) || (S.classes || [])[0];
+let classDates = {};                       // معرّف الشعبة ← [{date, period}] بترتيب الحصص
+
+function computeDates() {
   const hol = new Set(S.holidays.map(h => h.date));
   const startAll = parseISO(S.start), endAll = parseISO(S.end);
   const report = {};
-  for (const gid of Object.keys(CURRICULA)) {
-    const slots = (S.timetable[gid] || []).slice().sort((a,b) => a.d - b.d || a.p - b.p);
-    const list = sessionsIdx[gid];
-    let placed = 0;
-    if (!slots.length) { report[gid] = 0; continue; }
+  for (const c of S.classes) {
+    const slots = (c.tt || []).slice().sort((a, b) => a.d - b.d || a.p - b.p);
+    const total = sessionsIdx[c.g].length;
+    const out = classDates[c.id] = [];
     const d = new Date(startAll);
-    while (placed < list.length && d <= endAll) {
+    while (slots.length && out.length < total && d <= endAll) {
       const wd = d.getDay();
-      if (wd !== 5 && wd !== 6 && !hol.has(iso(d))) {           // تخطّي الجمعة والسبت والعطل
-        for (const sl of slots.filter(x => x.d === wd)) {
-          if (placed >= list.length) break;
-          list[placed].date = iso(d);
-          list[placed].period = sl.p;
-          placed++;
-        }
-      }
+      if (wd !== 5 && wd !== 6 && !hol.has(iso(d)))            // تخطّي الجمعة والسبت والعطل
+        for (const sl of slots.filter(x => x.d === wd)) { if (out.length >= total) break; out.push({ date: iso(d), period: sl.p }); }
       d.setDate(d.getDate() + 1);
     }
-    for (let i = placed; i < list.length; i++) { list[i].date = null; list[i].period = null; }
-    report[gid] = placed;
+    report[c.id] = out.length;
   }
   return report;
+}
+
+/** تطبيق تواريخ الشعبة المختارة على حصص صفّها */
+function applyClass() {
+  const c = curClass(); if (!c) return;
+  grade = c.g;
+  const ds = classDates[c.id] || [];
+  sessionsIdx[c.g].forEach((x, i) => { x.date = ds[i] ? ds[i].date : null; x.period = ds[i] ? ds[i].period : null; });
+}
+const generateDates = () => { const r = computeDates(); applyClass(); return r; };
+
+function fillClassSel() {
+  const gs = document.getElementById('gradeSel');
+  gs.innerHTML = S.classes.map(c => `<option value="${c.id}">${esc(CURRICULA[c.g].name)} ـ ${esc(c.name)}</option>`).join('');
+  gs.value = curClass().id;
 }
 
 async function persistSessions() {
@@ -188,14 +200,15 @@ const on = k => !S.sections || S.sections[k] !== false;
 function sheetHTML(s) {
   const p = prepOf(s);
   const v = (k, fb) => (p[k] !== undefined && p[k] !== null && p[k] !== '') ? p[k] : (fb ?? '');
-  const hgt = p.hgt || {};
-  const hSt = f => hgt[f] ? `style="min-height:${hgt[f]}mm" data-h="${hgt[f]}"` : 'style="min-height:14mm"';
-  const hCtl = f => `<span class="hctl no-print"><button data-hf="${f}" data-hd="-5" title="تقليل الفراغ">−</button><button data-hf="${f}" data-hd="5" title="زيادة المساحة">+</button>${hgt[f] ? `<button data-hf="${f}" data-hd="0" title="تلقائي">↺</button>` : ''}</span>`;
+  /* المقدمة والخاتمة والتقويم: من سطر واحد إلى ٤ أسطر كحدّ أقصى (تُحفظ لكل حصة) */
+  const lines = p.lines || {};
+  const hSt = f => `class="lines" style="--ln:${lines[f] || 1}" data-lines="${lines[f] || 1}"`;
+  const hCtl = f => `<span class="hctl no-print"><button data-hf="${f}" data-hd="-1" title="سطر أقل">−</button><span class="hv">${ar(lines[f] || 1)} س</span><button data-hf="${f}" data-hd="1" title="سطر أكثر">+</button></span>`;
   const media = s.media.slice(0, 3);
   while (media.length < 3) media.push('اختيار عنصر.');
 
   const headRows = [1,2,3].map(i => i === 1
-    ? `<tr><td class="valb">${fmtDate(s.date)}</td><td class="valb">${esc(s.section)}</td><td class="valb">${s.period?ar(s.period):'……'}</td></tr>`
+    ? `<tr><td class="valb">${fmtDate(s.date)}</td><td class="valb">${esc((curClass() || s).name || s.section)}</td><td class="valb">${s.period?ar(s.period):'……'}</td></tr>`
     : `<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`).join('');
 
   const evalRows = [1,2,3].map(() =>
@@ -251,7 +264,7 @@ function sheetHTML(s) {
 
     <div class="sect" style="margin-top:3mm">
       <div class="secttl">المقدمة والتمهيد${hCtl('intro')}</div>
-      <div class="sectwrap" ${hSt('intro')}>
+      <div class="sectwrap lines" style="--ln:${lines['intro'] || 1}" data-lines="${lines['intro'] || 1}">
         <div class="sectbox nb" contenteditable data-f="intro">${renderRich(v('intro', s.intro))}</div>
         ${figsHTML(s, 'intro')}
       </div>
@@ -278,12 +291,12 @@ function sheetHTML(s) {
 
     <div class="sect">
       <div class="secttl">الخاتمة والتقييم${hCtl('close')}</div>
-      <div class="sectbox" contenteditable data-f="close" ${hSt('close')}>${renderRich(v('close', s.close))}</div>
+      <div class="sectbox lines" contenteditable data-f="close" style="--ln:${lines['close'] || 1}" data-lines="${lines['close'] || 1}">${renderRich(v('close', s.close))}</div>
     </div>
 
     <div class="sect">
       <div class="secttl">التقويم${hCtl('evalx')}</div>
-      <div class="sectwrap" ${hSt('evalx')}>
+      <div class="sectwrap lines" style="--ln:${lines['evalx'] || 1}" data-lines="${lines['evalx'] || 1}">
         <div class="sectbox nb" contenteditable data-f="evalx">${renderRich(v('evalx', s.evalx))}</div>
         ${figsHTML(s, 'evalx')}
       </div>
@@ -311,7 +324,7 @@ function worksheetHTML(s) {
   const cell = `
     <div class="wcell">
       <h5>${esc(w.title)}</h5>
-      <div class="meta"><span>${esc(s.gradeName)} ـ ${esc(s.section)}</span><span>${esc(s.code)} ${esc(s.title)}</span></div>
+      <div class="meta"><span>${esc(s.gradeName)} ـ ${esc((curClass() || s).name || s.section)}</span><span>${esc(s.code)} ${esc(s.title)}</span></div>
       <ol><li>${mathWrap(esc(w.q1))}</li><li>${mathWrap(esc(w.q2))}</li></ol>
       <div class="nameline">الاسم: ………………………………  التاريخ: ${fmtDate(s.date)}</div>
     </div>`;
@@ -319,9 +332,11 @@ function worksheetHTML(s) {
 }
 
 /* ────────── المحرّر ────────── */
-function openEditor(gid, idx) {
+function openEditor(gid, idx, clsId) {
+  const cc = curClass();
+  const c = clsId ? S.classes.find(x => x.id === clsId) : (cc && cc.g === gid ? cc : S.classes.find(x => x.g === gid));
+  if (c) { S.cls = c.id; applyClass(); document.getElementById('gradeSel').value = c.id; }
   grade = gid; curIdx = idx;
-  document.getElementById('gradeSel').value = gid;
   show('editor');
 }
 
@@ -345,7 +360,7 @@ function renderEditor() {
   wireFigs();
   wireInline();
   zoomPaper();
-  hydrateAssets(paper).then(checkOverflow);
+  hydrateAssets(paper).then(() => { checkOverflow(); schedulePrint(); });
   checkOverflow();
 }
 
@@ -615,25 +630,29 @@ function renderHome() {
     `${DAYS[today.getDay()]} ${ar(today.getDate())}/${ar(today.getMonth()+1)}/${ar(today.getFullYear())}`;
   document.getElementById('todayLabel').textContent = S.teacher ? `أهلاً ${S.teacher}` : 'مرحباً بك';
 
-  const all = [].concat(...Object.values(sessionsIdx));
-  const todays = all.filter(s => s.date === t).sort((a,b) => (a.period||0) - (b.period||0));
+  const items = [];
+  for (const c of S.classes) (classDates[c.id] || []).forEach((d, i) => {
+    if (d.date) items.push({ c, s: sessionsIdx[c.g][i], date: d.date, period: d.period });
+  });
+  const attrs = x => `data-g="${x.s.gradeId}" data-i="${x.s.n}" data-c="${x.c.id}"`;
+  const todays = items.filter(x => x.date === t).sort((a, b) => a.period - b.period);
   document.getElementById('todaySessions').innerHTML = todays.length
-    ? todays.map(s => `<div class="card ${isDone(s)?'done':''}" data-g="${s.gradeId}" data-i="${s.n}">
-         <b>${esc(s.gradeName)} ـ الحصة ${ar(s.period||0)}</b>
-         <small>${esc(s.code)} ${esc(s.title)}</small>
-         <small>${esc(s.focus)}</small></div>`).join('')
-    : '<p class="hint">لا توجد حصص اليوم (أو لم تولّد التواريخ بعد من الإعدادات).</p>';
+    ? todays.map(x => `<div class="card ${isDone(x.s)?'done':''}" ${attrs(x)}>
+         <b>${esc(x.s.gradeName)} ${esc(x.c.name)} ـ الحصة ${ar(x.period||0)}</b>
+         <small>${esc(x.s.code)} ${esc(x.s.title)}</small>
+         <small>${esc(x.s.focus)}</small></div>`).join('')
+    : '<p class="hint">لا توجد حصص اليوم.</p>';
 
-  const start = new Date(today); start.setDate(start.getDate() - ((today.getDay()+7)%7));
+  const start = new Date(today); start.setDate(start.getDate() - today.getDay());
   const week = [];
   for (let i = 0; i < 7; i++) { const d = new Date(start); d.setDate(d.getDate()+i); week.push(iso(d)); }
-  const rows = all.filter(s => week.includes(s.date))
-                  .sort((a,b) => a.date.localeCompare(b.date) || (a.period||0)-(b.period||0));
+  const rows = items.filter(x => week.includes(x.date))
+                    .sort((a, b) => a.date.localeCompare(b.date) || a.period - b.period);
   document.getElementById('weekList').innerHTML = rows.length
-    ? rows.map(s => `<div class="wrow" data-g="${s.gradeId}" data-i="${s.n}">
-        <span class="d">${fmtDate(s.date).split(' ')[0]} ${ar(parseISO(s.date).getDate())}</span>
-        <span class="t">${esc(s.gradeName)} · ${esc(s.code)} ${esc(s.title)}</span>
-        <span class="s">${isDone(s)?'محضَّرة':'—'}</span></div>`).join('')
+    ? rows.map(x => `<div class="wrow" ${attrs(x)}>
+        <span class="d">${fmtDate(x.date).split(' ')[0]} ${ar(parseISO(x.date).getDate())}</span>
+        <span class="t">${esc(x.s.gradeName)} ${esc(x.c.name)} · الحصة ${ar(x.period)} · ${esc(x.s.code)} ${esc(x.s.title)}</span>
+        <span class="s">${isDone(x.s)?'محضَّرة':'—'}</span></div>`).join('')
     : '<p class="hint">لا حصص هذا الأسبوع.</p>';
   refreshStats();
 }
@@ -669,20 +688,27 @@ function renderSettings() {
   stVal('stYear', S.year); stVal('stTerm', S.term);
   stVal('stStart', S.start); stVal('stEnd', S.end);
 
-  document.getElementById('timetable').innerHTML = Object.keys(CURRICULA).map(gid => `
-    <div class="nbunit"><h4>${esc(CURRICULA[gid].name)} ـ ${esc(CURRICULA[gid].section)}</h4>
-      <table style="width:calc(100% - 0px);border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden">
+  document.getElementById('timetable').innerHTML = S.classes.map(c => `
+    <div class="nbunit"><h4 class="clshead">${esc(CURRICULA[c.g].name)} ـ الشعبة
+        <input data-cname="${c.id}" value="${esc(c.name)}" style="width:92px">
+        ${S.classes.length > 1 ? `<button class="btn sm" data-cdel="${c.id}">حذف الشعبة</button>` : ''}</h4>
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden">
         <tr>${DAYS.slice(0,5).map(d => `<th style="padding:6px;font-size:13px;background:#f2f5f9">${d}</th>`).join('')}</tr>
         <tr>${[0,1,2,3,4].map(d => {
-          const slot = (S.timetable[gid]||[]).find(x => x.d === d);
+          const slot = (c.tt || []).find(x => x.d === d);
           return `<td style="padding:6px;text-align:center">
-            <select data-tt="${gid}" data-d="${d}">
+            <select data-tt="${c.id}" data-d="${d}">
               <option value="">—</option>
               ${[1,2,3,4,5,6,7].map(p => `<option value="${p}" ${slot&&slot.p===p?'selected':''}>الحصة ${ar(p)}</option>`).join('')}
             </select></td>`;
         }).join('')}</tr>
       </table>
-    </div>`).join('');
+    </div>`).join('') + `
+    <div class="toolbar">
+      <select id="newClsGrade">${Object.keys(CURRICULA).map(g => `<option value="${g}">${esc(CURRICULA[g].name)}</option>`).join('')}</select>
+      <input id="newClsName" placeholder="اسم الشعبة ـ مثل ٨/٢" style="width:170px">
+      <button class="btn primary" id="addCls">＋ إضافة شعبة</button>
+    </div>`;
 
   renderSections();
   document.getElementById('holList').innerHTML = S.holidays.map((h,i) =>
@@ -762,25 +788,31 @@ async function start() {
 
   (await DB.all('preps')).forEach(p => prepCache[p.id] = p);
   await loadSessions();
-  if (ttMigrate) { generateDates(); await persistSessions(); }
+  // ترحيل: الجدول القديم (صف واحد لكل مستوى) يصبح شعبة لكل صف
+  if (!Array.isArray(S.classes) || !S.classes.length) {
+    S.classes = Object.keys(CURRICULA).map(g => ({ id: 'c' + g + '_1', g, name: CURRICULA[g].section,
+      tt: JSON.parse(JSON.stringify((S.timetable || DEFAULTS.timetable)[g] || [])) }));
+    S.cls = (S.classes.find(c => c.g === grade) || S.classes[0]).id;
+    await DB.put('settings', S);
+  }
+  computeDates(); applyClass();
 
   const gs = document.getElementById('gradeSel');
-  gs.innerHTML = Object.keys(CURRICULA).map(g =>
-    `<option value="${g}">${CURRICULA[g].name} ـ ${CURRICULA[g].section}</option>`).join('');
-  gs.value = grade;
-
-  // لو لم تولَّد التواريخ بعد، ولّدها تلقائياً من ١٥/٩/٢٠٢٦
-  if (!sessionsIdx[grade].some(s => s.date)) { generateDates(); await persistSessions(); }
+  fillClassSel();
 
   /* الأحداث */
   document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(t.dataset.view));
-  gs.onchange = () => { grade = gs.value; curIdx = 0;
-    const v = document.querySelector('.view:not(.hidden)').id.replace('view-','');
-    show(v === 'editor' ? 'editor' : v); if (v === 'editor') renderEditor(); };
+  gs.onchange = () => {
+    const prev = grade;
+    S.cls = gs.value; applyClass();
+    if (grade !== prev) curIdx = 0;
+    DB.put('settings', S);
+    show(document.querySelector('.view:not(.hidden)').id.replace('view-', ''));
+  };
 
   document.body.addEventListener('click', e => {
     const row = e.target.closest('[data-g][data-i]');
-    if (row) return openEditor(row.dataset.g, +row.dataset.i);
+    if (row) return openEditor(row.dataset.g, +row.dataset.i, row.dataset.c);
     const hb = e.target.closest('[data-hol]');
     if (hb) { S.holidays.splice(+hb.dataset.hol, 1); DB.put('settings', S); renderSettings(); }
   });
@@ -814,14 +846,8 @@ async function start() {
     const ses = sessionsIdx[grade][curIdx];
     const p = prepCache[ses.id] || (prepCache[ses.id] = { id: ses.id });
     const f = hb.dataset.hf, d = +hb.dataset.hd;
-    p.hgt = { ...(p.hgt || {}) };
-    if (!d) delete p.hgt[f];
-    else {
-      const el = document.querySelector(`#paper [data-f="${f}"]`);
-      const box = el.closest('.sectwrap') || el;
-      const cur = p.hgt[f] || Math.round(box.offsetHeight * 25.4 / 96);
-      p.hgt[f] = Math.max(8, Math.min(160, Math.round((cur + d) / 5) * 5));
-    }
+    p.lines = { ...(p.lines || {}) };
+    p.lines[f] = Math.max(1, Math.min(4, (p.lines[f] || 1) + d));
     markDirty(ses); renderEditor();
   });
   document.getElementById('paper').addEventListener('click', e => {
@@ -831,6 +857,23 @@ async function start() {
     p.figs = (p.figs !== undefined ? p.figs : (ses.figs || [])).filter((_, i) => i !== +b.dataset.delfig);
     markDirty(ses); renderEditor();
   });
+  /* شريط تنسيق النص */
+  const fmt = document.getElementById('fmtBar');
+  fmt.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+  fmt.addEventListener('click', e => {
+    const b = e.target.closest('[data-cmd]'); if (!b) return;
+    const box = document.activeElement && document.activeElement.closest('#paper [contenteditable][data-f]');
+    if (!box) return alert('انقر أولاً داخل المقدمة أو العرض أو الخاتمة أو التقويم.');
+    const [cmd, val] = b.dataset.cmd.split(':');
+    if (cmd === 'hilite') document.execCommand('hiliteColor', false, val);
+    else if (cmd === 'bullet') document.execCommand('insertText', false, '• ');
+    else document.execCommand(cmd, false, val || null);
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  document.getElementById('paper').addEventListener('focusout', e => {
+    if (e.target.closest && e.target.closest('[contenteditable][data-f]')) schedulePrint();
+  });
+
   document.getElementById('nbSearch').oninput = renderNotebook;
   document.getElementById('nbFilter').onchange = renderNotebook;
 
@@ -843,11 +886,29 @@ async function start() {
   });
 
   document.getElementById('timetable').addEventListener('change', e => {
-    const sel = e.target.closest('[data-tt]'); if (!sel) return;
-    const gid = sel.dataset.tt, d = +sel.dataset.d;
-    S.timetable[gid] = (S.timetable[gid] || []).filter(x => x.d !== d);
-    if (sel.value) S.timetable[gid].push({ d, p: +sel.value });
-    DB.put('settings', S);
+    const sel = e.target.closest('[data-tt]'), nm = e.target.closest('[data-cname]');
+    if (sel) {
+      const c = S.classes.find(x => x.id === sel.dataset.tt), d = +sel.dataset.d;
+      c.tt = (c.tt || []).filter(x => x.d !== d);
+      if (sel.value) c.tt.push({ d, p: +sel.value });
+    } else if (nm) {
+      const c = S.classes.find(x => x.id === nm.dataset.cname);
+      c.name = nm.value.trim() || c.name; fillClassSel();
+    } else return;
+    computeDates(); applyClass(); DB.put('settings', S);
+  });
+  document.getElementById('timetable').addEventListener('click', e => {
+    const del = e.target.closest('[data-cdel]');
+    if (del) {
+      if (S.classes.length < 2 || !confirm('حذف هذه الشعبة وجدولها؟ (التحضير نفسه لا يُحذف)')) return;
+      S.classes = S.classes.filter(c => c.id !== del.dataset.cdel);
+      if (!S.classes.some(c => c.id === S.cls)) S.cls = S.classes[0].id;
+    } else if (e.target.id === 'addCls') {
+      const g = document.getElementById('newClsGrade').value, name = document.getElementById('newClsName').value.trim();
+      if (!name) return alert('اكتب اسم الشعبة، مثل ٨/٢');
+      S.classes.push({ id: 'c' + g + '_' + Date.now().toString(36), g, name, tt: [] });
+    } else return;
+    computeDates(); applyClass(); fillClassSel(); DB.put('settings', S); renderSettings();
   });
 
   document.getElementById('addHol').onclick = () => {
@@ -861,7 +922,7 @@ async function start() {
   document.getElementById('btnGenerate').onclick = async () => {
     const rep = generateDates(); await persistSessions();
     document.getElementById('genMsg').textContent =
-      Object.entries(rep).map(([g,n]) => `${CURRICULA[g].name}: وُزّعت ${ar(n)} حصة`).join(' · ');
+      S.classes.map(c => `${CURRICULA[c.g].name} ${c.name}: وُزّعت ${ar(rep[c.id] || 0)} حصة`).join(' · ');
     renderHome();
   };
 

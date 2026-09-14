@@ -85,7 +85,6 @@ ul.hol button{border:0;background:transparent;color:var(--red);cursor:pointer;fo
 .pcol{min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .pcol+.pcol{border-inline-start:1px dashed #9aa;padding-inline-start:3mm}
 /* في الطباعة: صناديق المقدمة والخاتمة والتقويم على قدر نصّها ، فتذهب المساحة إلى العرض */
-.psheet .sectwrap[style*="min-height"]:not([data-h]),.psheet .sectbox[style*="min-height"]:not([data-h]){min-height:14mm!important}
 .sheet table{width:100%;border-collapse:collapse;table-layout:fixed}
 .sheet td,.sheet th{border:1px solid var(--line);padding:2px 4px;vertical-align:middle}
 .lbl{background:var(--grayfill);font-weight:700;text-align:center;font-size:.93em}
@@ -359,3 +358,18 @@ svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray
 .hctl button:hover{background:#eef5fd}
 @media (pointer:coarse){ .hctl button{min-width:40px;height:32px;font-size:18px} .secttl{min-height:36px} }
 @media print{ .hctl{display:none!important} }
+
+/* لا تُعرض دقائق الزمن (حتى في تحضيرات محفوظة قديمة) */
+.tm{display:none!important}
+
+/* ═══ صناديق بعدد أسطر: من ١ إلى ٤ ═══ */
+.sectwrap.lines,.sectbox.lines{min-height:calc(var(--ln,1) * 1.6em + 6mm)!important;max-height:calc(4 * 1.6em + 6mm);overflow:hidden}
+.sectwrap.lines:has(.inl),.sectwrap.lines:has(.figs){max-height:none}
+.hctl .hv{font-size:12px;color:var(--blue);background:#fff;border-radius:6px;padding:0 6px;line-height:20px;font-weight:700}
+@media (pointer:coarse){ .hctl .hv{line-height:32px;font-size:15px} }
+/* ═══ شريط تنسيق النص ═══ */
+.fmtbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:0 12px 8px;padding:5px 8px;background:#fff;border:1px solid #c7cedb;border-radius:10px}
+.fmtbar button{min-width:34px;height:32px;border:1px solid #d5dbe5;background:#f7f9fc;border-radius:7px;font:700 15px/1 var(--font);cursor:pointer}
+.fmtbar button:hover{background:#e8eef7}
+.fmtbar i{width:1px;height:22px;background:#d5dbe5;margin:0 4px}
+@media (pointer:coarse){ .fmtbar button{min-width:46px;height:44px;font-size:19px} }
