@@ -15,3 +15,5 @@ tools/jobs_*.json
 Thumbs.db
 desktop.ini
 .DS_Store
+tools/
+server.js.bak
