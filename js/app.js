@@ -720,7 +720,7 @@ async function printCurrent(mode) {
 /* ────────── الإقلاع ────────── */
 function banner(html, kind) {
   const d = document.createElement('div');
-  d.className = 'banner ' + (kind || '');
+  d.className = 'banner no-print ' + (kind || '');
   d.innerHTML = html;
   document.body.insertBefore(d, document.body.firstChild.nextSibling);
 }
@@ -729,6 +729,16 @@ function banner(html, kind) {
   try { await start(); }
   catch (err) {
     console.error(err);
+    // إصلاح ذاتي: خطأ عند الإقلاع غالباً سببه نسخة قديمة مخزّنة ـ نمسحها ونعيد التحميل مرّة واحدة
+    let healed = false; try { healed = sessionStorage.getItem("daftar_healed") === "1"; sessionStorage.setItem("daftar_healed", "1"); } catch {}
+    if (!healed && "serviceWorker" in navigator) {
+      try {
+        for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+        for (const k of await caches.keys()) await caches.delete(k);
+      } catch {}
+      location.reload();
+      return;
+    }
     banner(`<b>تعذّر تشغيل التطبيق.</b><br>${esc(err.message || err)}`, 'err');
   }
 })();
