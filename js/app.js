@@ -463,7 +463,6 @@ function flowShow(s) {
    على الشاشة تتمدّد الورقة بلا قصّ لتبقى قابلة للتحرير. للطباعة تُبنى نسخة A4 في #printArea:
    تُصبّ عناصر «العرض» ثم «تابع العرض» بالترتيب في صناديق ثابتة الارتفاع ، وتُضاف صفحات
    «تابع العرض» عند الحاجة قبل صفحة الخاتمة والتقويم ـ فلا يُقصّ مثال ولا تصغر الصور حتى تتعذّر قراءتها. */
-const PRINT_SCALE = 0.92, MIN_SCALE = 0.5;
 let printPages = 0;
 
 async function buildPrint() {
@@ -472,7 +471,6 @@ async function buildPrint() {
   host.innerHTML = '';
   document.body.classList.remove('pbuilt');
   if (src.length < 2) return 0;
-  host.style.setProperty('--sheetfs', (S.fontSize || 14) + 'px');
   const [p1, p2] = src.slice(0, 2).map(s => {
     const c = s.cloneNode(true);
     c.classList.add('psheet');
@@ -484,58 +482,95 @@ async function buildPrint() {
   host.append(p1, p2);
   await Promise.all([...host.querySelectorAll('img')].map(im => im.decode ? im.decode().catch(() => {}) : 0));
 
+  /* ورقة التحضير صفحتان دائماً:
+     يُصبّ «العرض» ثم «تابع العرض» بالترتيب ، وتُصغَّر كل الصور بنسبة واحدة (أكبر نسبة ممكنة).
+     إن كان المحتوى كثيراً يُوزَّع على عمودين في كل صفحة ، فتبقى الصور أكبر وأوضح. */
   const b1 = p1.querySelector('.sectbox[data-f="show"]'), b2 = p2.querySelector('.sectbox[data-f="show2"]');
+  let best = { k: 1, cols: false, fs: S.fontSize || 14 }, fits = true;
   if (b1 && b2) {
-    const scale = (n, k) => n.querySelectorAll && [...(n.matches?.('.inl') ? [n] : []), ...n.querySelectorAll('.inl')]
-      .forEach(sp => { sp.style.width = ((+sp.dataset.w || 90) * k).toFixed(1) + '%'; });
     const nodes = [...b1.children, ...b2.children];
-    b1.replaceChildren(); b2.replaceChildren();
-    nodes.forEach(n => scale(n, PRINT_SCALE));
-    // وحدات لا تنفصل: العنوان والتنبيه والسطر الفارغ يلتصق كلٌّ منها بما بعده ، فلا يبقى عنوان مثالٍ آخرَ الصفحة وصورته في التالية
+    const inls = nodes.flatMap(n => [...(n.matches('.inl') ? [n] : []), ...n.querySelectorAll('.inl')]);
     const stream = [];
     for (let i = 0, unit = []; i < nodes.length; i++) {
       unit.push(nodes[i]);
-      const sticky = nodes[i].matches('.mini, .alert, .gap, .inllbl') && i < nodes.length - 1;
-      if (!sticky) { stream.push(unit); unit = []; }
+      if (!(nodes[i].matches('.mini, .alert, .gap, .inllbl') && i < nodes.length - 1)) { stream.push(unit); unit = []; }
     }
-    const over = box => { const w = box.closest('.sectwrap') || box; return w.scrollHeight > w.clientHeight + 2; };
-    const pour = (box, items) => {
-      while (items.length) {
-        const unit = items[0];
-        unit.forEach(n => box.appendChild(n));
-        if (!over(box)) { items.shift(); continue; }
-        if (box.children.length === unit.length) {     // وحدة وحدها أكبر من صفحة كاملة: تُصغَّر حتى تتّسع
-          let k = PRINT_SCALE;
-          while (over(box) && k > MIN_SCALE) { k *= 0.92; unit.forEach(n => scale(n, k)); }
-          items.shift(); continue;
+    const wrapOver = box => { const w = box.closest('.sectwrap') || box; return w.scrollHeight > w.clientHeight + 1; };
+    const containers = cols => [b1, b2].flatMap(box => {
+      box.replaceChildren();
+      box.classList.toggle('pcols', cols);
+      if (!cols) return [box];
+      const a = document.createElement('div'), b = document.createElement('div');
+      a.className = b.className = 'pcol';
+      box.append(a, b);
+      return [a, b];
+    });
+    // k = عرض الصورة نسبةً إلى عرضها المختار على كامل الصفحة (في العمودين: نصف الصفحة حدٌّ أعلى)
+    let lastList = [];
+    const layout = (kk, cols) => {
+      inls.forEach(sp => { sp.style.width = Math.min(100, (+sp.dataset.w || 90) * kk * (cols ? 2 : 1)).toFixed(1) + '%'; });
+      const list = lastList = containers(cols);
+      const over = c => cols ? c.scrollHeight > c.clientHeight + 1 : wrapOver(c);
+      let ci = 0;
+      for (const u of stream) {
+        u.forEach(n => list[ci].appendChild(n));
+        while (over(list[ci])) {
+          if (list[ci].children.length === u.length || ci === list.length - 1) return false;
+          u.forEach(n => list[ci].removeChild(n));
+          ci++;
+          u.forEach(n => list[ci].appendChild(n));
         }
-        unit.forEach(n => box.removeChild(n));
-        break;
       }
-      return items;
+      return !list.some(over);
     };
-    let rest = pour(b1, stream);
-    for (let guard = 0; rest.length && guard < 10; guard++) {
-      const trial = [...rest];
-      pour(b2, trial);
-      if (!trial.length) { rest = []; break; }            // الباقي كلّه يتّسع في صفحة الخاتمة
-      b2.replaceChildren();
-      rest = rest.filter(u => u.length);
-      const ext = document.createElement('div');
-      ext.className = 'sheet psheet';
-      ext.innerHTML = '<div class="sect grow"><div class="secttl">تابع العرض</div><div class="sectwrap"><div class="sectbox nb"></div></div></div>';
-      host.insertBefore(ext, p2);
-      const n0 = rest.length;
-      rest = pour(ext.querySelector('.sectbox'), rest);
-      if (rest.length === n0) break;
+    const search = cols => {
+      const hi = cols ? 0.5 : 1;
+      if (layout(hi, cols)) return hi;
+      let lo = 0.15;
+      if (!layout(lo, cols)) return 0;
+      let top = hi;
+      for (let i = 0; i < 9; i++) { const mid = (lo + top) / 2; if (layout(mid, cols)) lo = mid; else top = mid; }
+      return lo;
+    };
+    const tryFont = fs => {
+      host.style.setProperty('--sheetfs', fs + 'px');
+      const single = search(false);
+      const two = single >= 0.55 ? 0 : search(true);
+      return two > single + 0.03 ? { k: two, cols: true, fs } : { k: single, cols: false, fs };
+    };
+    const fs0 = S.fontSize || 14;
+    best = tryFont(fs0);
+    if (best.k < 0.45 && fs0 > 12) { const alt = tryFont(12); if (alt.k > best.k + 0.04) best = alt; }
+    host.style.setProperty('--sheetfs', best.fs + 'px');
+    fits = best.k > 0;
+    layout(fits ? best.k : 0.15, best.cols);
+    /* ملء الفراغ: كل عمود أو صفحة تُكبَّر صورها بنسبة واحدة ما دامت تتّسع ،
+       دون تجاوز العرض الذي اختاره المعلّم للصورة (أو عرض العمود) */
+    if (fits) for (const c of lastList) {
+      const its = [...c.querySelectorAll(".inl")];
+      if (!its.length) continue;
+      const base = its.map(sp => parseFloat(sp.style.width));
+      const cap = Math.min(...its.map((sp, i) => (best.cols ? 100 : (+sp.dataset.w || 90)) / base[i]));
+      const overC = () => best.cols ? c.scrollHeight > c.clientHeight + 1 : wrapOver(c);
+      const apply = f => its.forEach((sp, i) => { sp.style.width = (base[i] * f).toFixed(1) + "%"; });
+      if (cap <= 1.01) continue;
+      let lo = 1, hi = cap;
+      apply(hi); if (!overC()) continue;
+      for (let i = 0; i < 8; i++) { const mid = (lo + hi) / 2; apply(mid); if (overC()) hi = mid; else lo = mid; }
+      apply(lo);
     }
-    if (rest.length) rest.forEach(u => u.forEach(n => b2.appendChild(n)));
-  }
+  } else host.style.setProperty('--sheetfs', (S.fontSize || 14) + 'px');
   document.body.classList.add('pbuilt');
-  printPages = host.querySelectorAll('.sheet').length;
+  printPages = 2;
   const info = document.getElementById('pagesInfo');
-  if (info) info.textContent = `الطباعة: ${ar(printPages)} ${printPages > 2 ? 'صفحات' : 'صفحتان'}`;
-  return printPages;
+  if (info) {
+    const pct = Math.round(best.k * 100);
+    info.textContent = !fits ? 'تنبيه: المحتوى أكبر من صفحتين ـ احذف أو صغّر بعض الصور'
+      : `الطباعة: صفحتان${best.cols ? ' بعمودين' : ''}${best.k < 1 ? ` · الصور ${ar(pct)}٪` : ''}`;
+    info.classList.toggle('dirty', !fits || best.k < 0.35);
+  }
+  window.__printInfo = { k: best.k, cols: best.cols, fs: best.fs };
+  return fits ? best.k : -1;
 }
 let printTimer = 0;
 const schedulePrint = () => { clearTimeout(printTimer); printTimer = setTimeout(buildPrint, 700); };
