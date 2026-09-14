@@ -53,20 +53,9 @@ const DB = (() => {
     /** هل يعمل التطبيق بلا حفظ دائم؟ (فتح بعنوان file:// أو منع تخزين المواقع) */
     get noStore() { return memMode; },
 
-    /** يُستدعى بعد كل كتابة من المستخدم (تستعمله المزامنة لجدولة الرفع) */
-    onWrite: null,
-
     get:  (store, id)   => tx(store, 'readonly',  s => s.get(id),      m => m.get(id)),
     all:  (store)       => tx(store, 'readonly',  s => s.getAll(),     m => [...m.values()]),
-    /** كتابة من المستخدم: تُختم بوقت التعديل ts ليُعرف الأحدث عند المزامنة */
-    put(store, val) {
-      if (store !== 'books') val.ts = Date.now();
-      const p = tx(store, 'readwrite', s => s.put(val), m => (m.set(val.id, val), val));
-      if (store !== 'books' && this.onWrite) p.then(() => this.onWrite(store));
-      return p;
-    },
-    /** كتابة كما هي دون ختم الوقت (للمزامنة والاستيراد) */
-    putRaw: (store, val) => tx(store, 'readwrite', s => s.put(val), m => (m.set(val.id, val), val)),
+    put:  (store, val)  => tx(store, 'readwrite', s => s.put(val),     m => (m.set(val.id, val), val)),
     del:  (store, id)   => tx(store, 'readwrite', s => s.delete(id),   m => m.delete(id)),
     clear:(store)       => tx(store, 'readwrite', s => s.clear(),      m => m.clear()),
 
@@ -89,7 +78,7 @@ const DB = (() => {
       for (const st of ['settings', 'sessions', 'preps', 'assets', 'overrides']) {
         if (!data[st]) continue;
         await this.clear(st);
-        for (const row of data[st]) await this.putRaw(st, row);
+        for (const row of data[st]) await this.put(st, row);
       }
       if (data.books) {
         await this.clear('books');
