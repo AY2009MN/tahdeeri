@@ -46,6 +46,7 @@ function cleanHTML(el) {
   c.querySelectorAll('.inlbar,.inlh').forEach(x => x.remove());
   c.querySelectorAll('.inl.sel').forEach(x => x.classList.remove('sel'));
   c.querySelectorAll('img[data-asset]').forEach(x => x.removeAttribute('src'));
+  c.querySelectorAll('.inl[data-w]').forEach(x => { x.style.width = x.dataset.w + '%'; });   // يُحفظ العرض المختار لا المصغَّر
   return c.innerHTML;
 }
 
@@ -141,7 +142,7 @@ async function insertInline(dataUrl, { w } = {}) {
   }
   await hydrateAssets(row);
   box.dispatchEvent(new Event('input', { bubbles: true }));
-  setTimeout(checkOverflow, 60);
+  setTimeout(fitSheets, 60);
   row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   return true;
 }
@@ -150,7 +151,7 @@ async function insertInline(dataUrl, { w } = {}) {
 function inlSave(el) {
   const box = el.closest('.sectbox');
   if (box) box.dispatchEvent(new Event('input', { bubbles: true }));
-  setTimeout(checkOverflow, 30);
+  setTimeout(fitSheets, 30);
 }
 
 function inlDeselect() {

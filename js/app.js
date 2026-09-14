@@ -123,11 +123,15 @@ function flatten(gid) {
       show:  u.ready ? s.show  : slotify(s.show),
       show2: u.ready ? (s.show2 || '') : slotify(s.show2 || ''),
       close: s.close,
-      evalx: s.evalx, worksheet: s.worksheet || null, figs: s.figs || []
+      evalx: s.evalx, worksheet: s.worksheet || null, figs: s.figs || [],
+      ready: !!u.ready                // حصة جاهزة ضمن المنهج (الوحدة الأولى) تُعدّ محضَّرة
     });
   })));
   return out;
 }
+
+/** محضَّرة: جاهزة في المنهج أو عدّلها المعلّم */
+const isDone = s => s.ready || s.status === 'prepped';
 
 /* ────────── توليد التواريخ ────────── */
 function generateDates() {
@@ -333,12 +337,13 @@ function renderEditor() {
       const p = prepCache[s.id] || (prepCache[s.id] = { id: s.id });
       p[el.dataset.f] = el.classList.contains('sectbox') ? cleanHTML(el) : el.innerText;
       markDirty(s);
+      schedulePrint();
     });
   });
   wireFigs();
   wireInline();
-  hydrateAssets(paper).then(checkOverflow);
-  paper.querySelectorAll('img').forEach(im => im.complete || im.addEventListener('load', checkOverflow, { once: true }));
+  zoomPaper();
+  hydrateAssets(paper).then(schedulePrint);
   checkOverflow();
 }
 
@@ -454,6 +459,96 @@ function flowShow(s) {
   b2.innerHTML = renderRich(lines.slice(fit.length).join('\n'));
 }
 
+/* ────────── نسخة الطباعة المرقّمة ──────────
+   على الشاشة تتمدّد الورقة بلا قصّ لتبقى قابلة للتحرير. للطباعة تُبنى نسخة A4 في #printArea:
+   تُصبّ عناصر «العرض» ثم «تابع العرض» بالترتيب في صناديق ثابتة الارتفاع ، وتُضاف صفحات
+   «تابع العرض» عند الحاجة قبل صفحة الخاتمة والتقويم ـ فلا يُقصّ مثال ولا تصغر الصور حتى تتعذّر قراءتها. */
+const PRINT_SCALE = 0.92, MIN_SCALE = 0.5;
+let printPages = 0;
+
+async function buildPrint() {
+  const host = document.getElementById('printArea');
+  const src = [...document.querySelectorAll('#paper .sheet')];
+  host.innerHTML = '';
+  document.body.classList.remove('pbuilt');
+  if (src.length < 2) return 0;
+  host.style.setProperty('--sheetfs', (S.fontSize || 14) + 'px');
+  const [p1, p2] = src.slice(0, 2).map(s => {
+    const c = s.cloneNode(true);
+    c.classList.add('psheet');
+    c.querySelectorAll('.inlbar,.inlh,.fighandle,.figbar,.fh,.figcolors').forEach(x => x.remove());
+    c.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
+    c.querySelectorAll('.sel,.overflowwarn').forEach(x => x.classList.remove('sel', 'overflowwarn'));
+    return c;
+  });
+  host.append(p1, p2);
+  await Promise.all([...host.querySelectorAll('img')].map(im => im.decode ? im.decode().catch(() => {}) : 0));
+
+  const b1 = p1.querySelector('.sectbox[data-f="show"]'), b2 = p2.querySelector('.sectbox[data-f="show2"]');
+  if (b1 && b2) {
+    const scale = (n, k) => n.querySelectorAll && [...(n.matches?.('.inl') ? [n] : []), ...n.querySelectorAll('.inl')]
+      .forEach(sp => { sp.style.width = ((+sp.dataset.w || 90) * k).toFixed(1) + '%'; });
+    const nodes = [...b1.children, ...b2.children];
+    b1.replaceChildren(); b2.replaceChildren();
+    nodes.forEach(n => scale(n, PRINT_SCALE));
+    // وحدات لا تنفصل: العنوان والتنبيه والسطر الفارغ يلتصق كلٌّ منها بما بعده ، فلا يبقى عنوان مثالٍ آخرَ الصفحة وصورته في التالية
+    const stream = [];
+    for (let i = 0, unit = []; i < nodes.length; i++) {
+      unit.push(nodes[i]);
+      const sticky = nodes[i].matches('.mini, .alert, .gap, .inllbl') && i < nodes.length - 1;
+      if (!sticky) { stream.push(unit); unit = []; }
+    }
+    const over = box => { const w = box.closest('.sectwrap') || box; return w.scrollHeight > w.clientHeight + 2; };
+    const pour = (box, items) => {
+      while (items.length) {
+        const unit = items[0];
+        unit.forEach(n => box.appendChild(n));
+        if (!over(box)) { items.shift(); continue; }
+        if (box.children.length === unit.length) {     // وحدة وحدها أكبر من صفحة كاملة: تُصغَّر حتى تتّسع
+          let k = PRINT_SCALE;
+          while (over(box) && k > MIN_SCALE) { k *= 0.92; unit.forEach(n => scale(n, k)); }
+          items.shift(); continue;
+        }
+        unit.forEach(n => box.removeChild(n));
+        break;
+      }
+      return items;
+    };
+    let rest = pour(b1, stream);
+    for (let guard = 0; rest.length && guard < 10; guard++) {
+      const trial = [...rest];
+      pour(b2, trial);
+      if (!trial.length) { rest = []; break; }            // الباقي كلّه يتّسع في صفحة الخاتمة
+      b2.replaceChildren();
+      rest = rest.filter(u => u.length);
+      const ext = document.createElement('div');
+      ext.className = 'sheet psheet';
+      ext.innerHTML = '<div class="sect grow"><div class="secttl">تابع العرض</div><div class="sectwrap"><div class="sectbox nb"></div></div></div>';
+      host.insertBefore(ext, p2);
+      const n0 = rest.length;
+      rest = pour(ext.querySelector('.sectbox'), rest);
+      if (rest.length === n0) break;
+    }
+    if (rest.length) rest.forEach(u => u.forEach(n => b2.appendChild(n)));
+  }
+  document.body.classList.add('pbuilt');
+  printPages = host.querySelectorAll('.sheet').length;
+  const info = document.getElementById('pagesInfo');
+  if (info) info.textContent = `الطباعة: ${ar(printPages)} ${printPages > 2 ? 'صفحات' : 'صفحتان'}`;
+  return printPages;
+}
+let printTimer = 0;
+const schedulePrint = () => { clearTimeout(printTimer); printTimer = setTimeout(buildPrint, 700); };
+window.fitSheets = schedulePrint;               // يُستدعى بعد إدراج صورة أو تغيير حجمها
+
+/** على الشاشات الأضيق من A4 تُصغَّر الورقة كلها بصرياً وتبقى هندستها A4 كما تُطبع */
+function zoomPaper() {
+  const paper = document.getElementById('paper'); if (!paper) return;
+  const avail = (paper.parentElement || document.body).clientWidth - 20;
+  paper.style.zoom = Math.min(1, avail / 800).toFixed(3);
+}
+window.addEventListener('resize', zoomPaper);
+
 /** تنبيه بصري عند تجاوز المحتوى ارتفاع الصندوق */
 function checkOverflow() {
   document.querySelectorAll('.sectwrap, .sectbox:not(.nb)').forEach(b => {
@@ -484,7 +579,7 @@ function renderHome() {
   const all = [].concat(...Object.values(sessionsIdx));
   const todays = all.filter(s => s.date === t).sort((a,b) => (a.period||0) - (b.period||0));
   document.getElementById('todaySessions').innerHTML = todays.length
-    ? todays.map(s => `<div class="card ${s.status==='prepped'?'done':''}" data-g="${s.gradeId}" data-i="${s.n}">
+    ? todays.map(s => `<div class="card ${isDone(s)?'done':''}" data-g="${s.gradeId}" data-i="${s.n}">
          <b>${esc(s.gradeName)} ـ الحصة ${ar(s.period||0)}</b>
          <small>${esc(s.code)} ${esc(s.title)}</small>
          <small>${esc(s.focus)}</small></div>`).join('')
@@ -499,7 +594,7 @@ function renderHome() {
     ? rows.map(s => `<div class="wrow" data-g="${s.gradeId}" data-i="${s.n}">
         <span class="d">${fmtDate(s.date).split(' ')[0]} ${ar(parseISO(s.date).getDate())}</span>
         <span class="t">${esc(s.gradeName)} · ${esc(s.code)} ${esc(s.title)}</span>
-        <span class="s">${s.status==='prepped'?'محضَّرة':'—'}</span></div>`).join('')
+        <span class="s">${isDone(s)?'محضَّرة':'—'}</span></div>`).join('')
     : '<p class="hint">لا حصص هذا الأسبوع.</p>';
   refreshStats();
 }
@@ -507,7 +602,7 @@ function renderHome() {
 function refreshStats() {
   const list = sessionsIdx[grade] || [];
   document.getElementById('statTotal').textContent = ar(list.length);
-  document.getElementById('statDone').textContent = ar(list.filter(s => s.status === 'prepped').length);
+  document.getElementById('statDone').textContent = ar(list.filter(s => isDone(s)).length);
 }
 
 function renderNotebook() {
@@ -517,13 +612,13 @@ function renderNotebook() {
   const byUnit = {};
   list.forEach(s => {
     if (q && !(s.title + s.code + s.focus).includes(q)) return;
-    if (f === 'done' && s.status !== 'prepped') return;
-    if (f === 'todo' && s.status === 'prepped') return;
+    if (f === 'done' && !isDone(s)) return;
+    if (f === 'todo' && isDone(s)) return;
     (byUnit[s.unitNo] ||= { title: s.unitTitle, rows: [] }).rows.push(s);
   });
   document.getElementById('nbList').innerHTML = Object.entries(byUnit).map(([no, u]) => `
     <div class="nbunit"><h4>الوحدة ${esc(no)} ـ ${esc(u.title)}</h4>
-      ${u.rows.map(s => `<div class="nbrow ${s.status==='prepped'?'done':''}" data-g="${s.gradeId}" data-i="${s.n}">
+      ${u.rows.map(s => `<div class="nbrow ${isDone(s)?'done':''}" data-g="${s.gradeId}" data-i="${s.n}">
         <span class="n">${ar(s.n+1)}</span>
         <span class="t">${esc(s.code)} ${esc(s.title)} <small style="color:#5a6472">(${ar(s.partIdx)}/${ar(s.partOf)})</small></span>
         <span class="dt">${fmtDate(s.date)}</span></div>`).join('')}
@@ -571,13 +666,20 @@ function renderSections() {
 const stVal = (id, v) => { const e = document.getElementById(id); if (e) e.value = v ?? ''; };
 
 /* ────────── الطباعة ────────── */
-function printCurrent(mode) {
+async function printCurrent(mode) {
   const s = sessionsIdx[grade][curIdx];
   const paper = document.getElementById('paper');
-  const keep = paper.innerHTML;
-  if (mode === 'worksheet') paper.innerHTML = worksheetHTML(s);
+  if (mode === 'worksheet') {
+    document.body.classList.remove('pbuilt');
+    document.getElementById('printArea').innerHTML = '';
+    paper.innerHTML = worksheetHTML(s);
+    window.print();
+    setTimeout(() => renderEditor(), 300);
+    return;
+  }
+  clearTimeout(printTimer);
+  await buildPrint();
   window.print();
-  if (mode === 'worksheet') setTimeout(() => { paper.innerHTML = keep; renderEditor(); }, 300);
 }
 
 /* ────────── الإقلاع ────────── */
