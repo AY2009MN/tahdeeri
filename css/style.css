@@ -338,3 +338,15 @@ svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray
 .figrow.side img{flex:1 1 auto}
 .figlabel{font-weight:700;color:#1b4c8c;margin-bottom:1mm;text-align:center}
 .figlabel.side{flex:0 0 34%;text-align:start;margin:0}
+
+/* ═══ اللمس (التاب والهاتف): أزرار ومقابض بحجم الإصبع ═══ */
+.inlh{touch-action:none}
+@media (pointer:coarse){
+  .inlbar{padding:6px 8px;gap:4px;border-radius:12px}
+  .inlbar button{min-width:46px;height:46px;font-size:21px;border-radius:9px}
+  .inlbar span{font-size:16px;min-width:52px}
+  .inlbar i{height:30px}
+  .inlh{width:36px;height:36px;left:-18px;bottom:-18px;border-width:3px}
+  .slot{padding:6px 14px;font-size:1em;margin:1.5mm 0}
+  .btn{padding:10px 16px}
+}

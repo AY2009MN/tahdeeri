@@ -248,7 +248,7 @@ function sheetHTML(s) {
 
     <div class="sect" style="margin-top:3mm">
       <div class="secttl">المقدمة والتمهيد</div>
-      <div class="sectwrap" style="min-height:34mm">
+      <div class="sectwrap" style="min-height:14mm">
         <div class="sectbox nb" contenteditable data-f="intro">${renderRich(v('intro', s.intro))}</div>
         ${figsHTML(s, 'intro')}
       </div>
@@ -275,12 +275,12 @@ function sheetHTML(s) {
 
     <div class="sect">
       <div class="secttl">الخاتمة والتقييم</div>
-      <div class="sectbox" contenteditable data-f="close" style="min-height:30mm">${renderRich(v('close', s.close))}</div>
+      <div class="sectbox" contenteditable data-f="close" style="min-height:14mm">${renderRich(v('close', s.close))}</div>
     </div>
 
     <div class="sect">
       <div class="secttl">التقويم</div>
-      <div class="sectwrap" style="min-height:30mm">
+      <div class="sectwrap" style="min-height:14mm">
         <div class="sectbox nb" contenteditable data-f="evalx">${renderRich(v('evalx', s.evalx))}</div>
         ${figsHTML(s, 'evalx')}
       </div>
@@ -337,13 +337,12 @@ function renderEditor() {
       const p = prepCache[s.id] || (prepCache[s.id] = { id: s.id });
       p[el.dataset.f] = el.classList.contains('sectbox') ? cleanHTML(el) : el.innerText;
       markDirty(s);
-      schedulePrint();
     });
   });
   wireFigs();
   wireInline();
   zoomPaper();
-  hydrateAssets(paper).then(schedulePrint);
+  hydrateAssets(paper).then(checkOverflow);
   checkOverflow();
 }
 
@@ -490,6 +489,7 @@ async function buildPrint() {
   if (b1 && b2) {
     const nodes = [...b1.children, ...b2.children];
     const inls = nodes.flatMap(n => [...(n.matches('.inl') ? [n] : []), ...n.querySelectorAll('.inl')]);
+    const introInls = [...p1.querySelectorAll('.sectbox[data-f="intro"] .inl')];   // صور المقدمة تُصغَّر معها
     const stream = [];
     for (let i = 0, unit = []; i < nodes.length; i++) {
       unit.push(nodes[i]);
@@ -509,6 +509,7 @@ async function buildPrint() {
     let lastList = [];
     const layout = (kk, cols) => {
       inls.forEach(sp => { sp.style.width = Math.min(100, (+sp.dataset.w || 90) * kk * (cols ? 2 : 1)).toFixed(1) + '%'; });
+      introInls.forEach(sp => { sp.style.width = ((+sp.dataset.w || 90) * kk).toFixed(1) + '%'; });
       const list = lastList = containers(cols);
       const over = c => cols ? c.scrollHeight > c.clientHeight + 1 : wrapOver(c);
       let ci = 0;
@@ -574,7 +575,7 @@ async function buildPrint() {
 }
 let printTimer = 0;
 const schedulePrint = () => { clearTimeout(printTimer); printTimer = setTimeout(buildPrint, 700); };
-window.fitSheets = schedulePrint;               // يُستدعى بعد إدراج صورة أو تغيير حجمها
+window.fitSheets = () => checkOverflow();   // ترتيب الطباعة يُبنى عند الضغط على «معاينة وطباعة» فقط               // يُستدعى بعد إدراج صورة أو تغيير حجمها
 
 /** على الشاشات الأضيق من A4 تُصغَّر الورقة كلها بصرياً وتبقى هندستها A4 كما تُطبع */
 function zoomPaper() {

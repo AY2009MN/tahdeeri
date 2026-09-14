@@ -14,7 +14,7 @@ const ASSETS = {};                                   // معرّف ← data URL 
 
 /* ────────── بناء العناصر ────────── */
 function inlSpan({ src, asset, w = 90, al = 'c' }) {
-  const img = asset ? `<img data-asset="${esc(asset)}" alt="">` : `<img src="${esc(src)}" alt="">`;
+  const img = asset ? `<img data-asset="${esc(asset)}" alt="" decoding="async">` : `<img src="${esc(src)}" alt="" decoding="async">`;
   return `<span class="inl al-${al}" contenteditable="false" data-w="${w}" style="width:${w}%">${img}</span>`;
 }
 
