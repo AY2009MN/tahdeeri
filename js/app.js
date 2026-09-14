@@ -188,6 +188,9 @@ const on = k => !S.sections || S.sections[k] !== false;
 function sheetHTML(s) {
   const p = prepOf(s);
   const v = (k, fb) => (p[k] !== undefined && p[k] !== null && p[k] !== '') ? p[k] : (fb ?? '');
+  const hgt = p.hgt || {};
+  const hSt = f => hgt[f] ? `style="min-height:${hgt[f]}mm" data-h="${hgt[f]}"` : 'style="min-height:14mm"';
+  const hCtl = f => `<span class="hctl no-print"><button data-hf="${f}" data-hd="-5" title="تقليل الفراغ">−</button><button data-hf="${f}" data-hd="5" title="زيادة المساحة">+</button>${hgt[f] ? `<button data-hf="${f}" data-hd="0" title="تلقائي">↺</button>` : ''}</span>`;
   const media = s.media.slice(0, 3);
   while (media.length < 3) media.push('اختيار عنصر.');
 
@@ -247,8 +250,8 @@ function sheetHTML(s) {
     </table>` : ''}
 
     <div class="sect" style="margin-top:3mm">
-      <div class="secttl">المقدمة والتمهيد</div>
-      <div class="sectwrap" style="min-height:14mm">
+      <div class="secttl">المقدمة والتمهيد${hCtl('intro')}</div>
+      <div class="sectwrap" ${hSt('intro')}>
         <div class="sectbox nb" contenteditable data-f="intro">${renderRich(v('intro', s.intro))}</div>
         ${figsHTML(s, 'intro')}
       </div>
@@ -274,13 +277,13 @@ function sheetHTML(s) {
     </div>
 
     <div class="sect">
-      <div class="secttl">الخاتمة والتقييم</div>
-      <div class="sectbox" contenteditable data-f="close" style="min-height:14mm">${renderRich(v('close', s.close))}</div>
+      <div class="secttl">الخاتمة والتقييم${hCtl('close')}</div>
+      <div class="sectbox" contenteditable data-f="close" ${hSt('close')}>${renderRich(v('close', s.close))}</div>
     </div>
 
     <div class="sect">
-      <div class="secttl">التقويم</div>
-      <div class="sectwrap" style="min-height:14mm">
+      <div class="secttl">التقويم${hCtl('evalx')}</div>
+      <div class="sectwrap" ${hSt('evalx')}>
         <div class="sectbox nb" contenteditable data-f="evalx">${renderRich(v('evalx', s.evalx))}</div>
         ${figsHTML(s, 'evalx')}
       </div>
@@ -804,6 +807,23 @@ async function start() {
   document.getElementById('imgFile').onchange = e => { const f = e.target.files[0]; if (f) insertImage(f); e.target.value = ''; };
   document.getElementById('fsSel').value = String(S.fontSize || 14);
   document.getElementById('fsSel').onchange = e => { S.fontSize = +e.target.value; DB.put('settings', S); renderEditor(); };
+  /* ضبط ارتفاع صناديق المقدمة والخاتمة والتقويم يدوياً (يُحفظ لكل حصة ويُطبَّق في الطباعة) */
+  document.getElementById('paper').addEventListener('click', e => {
+    const hb = e.target.closest('[data-hd]'); if (!hb) return;
+    e.preventDefault(); e.stopPropagation();
+    const ses = sessionsIdx[grade][curIdx];
+    const p = prepCache[ses.id] || (prepCache[ses.id] = { id: ses.id });
+    const f = hb.dataset.hf, d = +hb.dataset.hd;
+    p.hgt = { ...(p.hgt || {}) };
+    if (!d) delete p.hgt[f];
+    else {
+      const el = document.querySelector(`#paper [data-f="${f}"]`);
+      const box = el.closest('.sectwrap') || el;
+      const cur = p.hgt[f] || Math.round(box.offsetHeight * 25.4 / 96);
+      p.hgt[f] = Math.max(8, Math.min(160, Math.round((cur + d) / 5) * 5));
+    }
+    markDirty(ses); renderEditor();
+  });
   document.getElementById('paper').addEventListener('click', e => {
     const b = e.target.closest('[data-delfig]'); if (!b) return;
     const ses = sessionsIdx[grade][curIdx];

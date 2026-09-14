@@ -85,7 +85,7 @@ ul.hol button{border:0;background:transparent;color:var(--red);cursor:pointer;fo
 .pcol{min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .pcol+.pcol{border-inline-start:1px dashed #9aa;padding-inline-start:3mm}
 /* في الطباعة: صناديق المقدمة والخاتمة والتقويم على قدر نصّها ، فتذهب المساحة إلى العرض */
-.psheet .sectwrap[style*="min-height"],.psheet .sectbox[style*="min-height"]{min-height:14mm!important}
+.psheet .sectwrap[style*="min-height"]:not([data-h]),.psheet .sectbox[style*="min-height"]:not([data-h]){min-height:14mm!important}
 .sheet table{width:100%;border-collapse:collapse;table-layout:fixed}
 .sheet td,.sheet th{border:1px solid var(--line);padding:2px 4px;vertical-align:middle}
 .lbl{background:var(--grayfill);font-weight:700;text-align:center;font-size:.93em}
@@ -350,3 +350,12 @@ svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray
   .slot{padding:6px 14px;font-size:1em;margin:1.5mm 0}
   .btn{padding:10px 16px}
 }
+
+/* ═══ ضبط ارتفاع الصناديق ═══ */
+.secttl{position:relative}
+.hctl{position:absolute;inset-inline-end:4px;top:50%;transform:translateY(-50%);display:flex;gap:3px}
+.hctl button{border:1px solid #9aa7b8;background:#fff;color:var(--blue);border-radius:6px;min-width:24px;height:20px;
+  font:700 13px/1 var(--font);cursor:pointer;padding:0 5px}
+.hctl button:hover{background:#eef5fd}
+@media (pointer:coarse){ .hctl button{min-width:40px;height:32px;font-size:18px} .secttl{min-height:36px} }
+@media print{ .hctl{display:none!important} }
