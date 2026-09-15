@@ -7,13 +7,13 @@
 مسودة_*.json
 
 # أدوات التطوير المحلية
-tools/views/
-tools/jobs_*.json
+تحضير-ويب-سريع/tools/views/
+تحضير-ويب-سريع/tools/jobs_*.json
 .claude/
 
 # نظام التشغيل
 Thumbs.db
 desktop.ini
 .DS_Store
-tools/
-server.js.bak
+تحضير-ويب-سريع/tools/
+تحضير-ويب-سريع/server.js.bak

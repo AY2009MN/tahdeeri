@@ -1,0 +1,61 @@
+# حزمة التحميل: بعد كل دفعة إلى main تُبنى نسخة مضغوطة من تطبيق الويب
+# وتُحفظ في مجلد «تحميل-نسخة-الهاتف-أو-التاب» ، فيجد المعلّم آخر تحديث جاهزاً دائماً.
+name: بناء حزمة التحميل
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'تحميل-نسخة-الهاتف-أو-التاب/**'   # لا تُعِد البناء بسبب دفعة البناء نفسها
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: package
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: تجهيز المجلد
+        run: mkdir -p 'تحميل-نسخة-الهاتف-أو-التاب'
+
+      - name: ضغط تطبيق الويب
+        run: |
+          cd 'تحضير-ويب-سريع'
+          zip -r -q '../تحميل-نسخة-الهاتف-أو-التاب/دفتر-التحضير.zip' . \
+            -x 'tools/*' -x '*.pdf' -x '*.daftar'
+          cd ..
+
+      - name: كتابة بطاقة النسخة
+        run: |
+          {
+            echo "# تحميل نسخة الهاتف أو التاب"
+            echo
+            echo "آخر تحديث: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo
+            echo "- الدفعة: \`${GITHUB_SHA::7}\`"
+            echo "- الحجم: $(du -h 'تحميل-نسخة-الهاتف-أو-التاب/دفتر-التحضير.zip' | cut -f1)"
+            echo
+            echo "## كيف تُثبّته"
+            echo
+            echo "**الأسهل ـ بلا تحميل:** افتح <https://ay2009mn.github.io/tahdeeri/> ثم من قائمة"
+            echo "المتصفح اختر «إضافة إلى الشاشة الرئيسية» ، فيعمل كتطبيق ويحدّث نفسه تلقائياً."
+            echo
+            echo "**نسخة بلا إنترنت:** نزّل \`دفتر-التحضير.zip\` وفكّ ضغطه ، ثم على الحاسوب شغّل"
+            echo "\`تشغيل التطبيق.cmd\` داخل المجلد (لا تفتح \`index.html\` مباشرة ، فالمتصفح يمنع الحفظ)."
+          } > 'تحميل-نسخة-الهاتف-أو-التاب/README.md'
+
+      - name: دفع الحزمة
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add 'تحميل-نسخة-الهاتف-أو-التاب'
+          git diff --staged --quiet && echo 'لا جديد' && exit 0
+          git commit -m "حزمة التحميل: تحديث تلقائي ${GITHUB_SHA::7}"
+          git push
