@@ -254,3 +254,24 @@ function wireInline() {
     if (e.key === 'Escape') inlDeselect();
   });
 }
+
+/* ────────── الكتابة في أيّ مكان داخل الصندوق ──────────
+   صندوق النصّ بارتفاع محتواه ، فالنقر تحت آخر سطر كان يقع على إطار القسم
+   فلا يستقبل الكتابة. هنا نحوّل أيّ نقرة داخل القسم إلى مؤشّر كتابة في نهايته. */
+function wireBoxClick() {
+  const paper = document.getElementById('paper');
+  if (!paper || paper.dataset.boxwired) return;
+  paper.dataset.boxwired = '1';
+  paper.addEventListener('mousedown', e => {
+    if (e.target.closest('.inl, .inlbar, .inlh, .slot, .hctl, [contenteditable]')) return;
+    const wrap = e.target.closest('.sectwrap, .sect');
+    const box = wrap && wrap.querySelector('[contenteditable][data-f]');
+    if (!box) return;
+    e.preventDefault();
+    box.focus();
+    const r = document.createRange();
+    r.selectNodeContents(box); r.collapse(false);       // المؤشّر بعد آخر حرف
+    const s = document.getSelection(); s.removeAllRanges(); s.addRange(r);
+    box.scrollIntoView({ block: 'nearest' });
+  });
+}

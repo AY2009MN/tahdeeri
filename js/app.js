@@ -373,6 +373,7 @@ function renderEditor() {
   });
   wireFigs();
   wireInline();
+  wireBoxClick();
   zoomPaper();
   hydrateAssets(paper).then(() => checkOverflow());
   checkOverflow();
