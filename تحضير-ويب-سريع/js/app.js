@@ -375,6 +375,7 @@ function renderEditor() {
   });
   wireFigs();
   if (typeof inlRestoreFree === 'function') inlRestoreFree(paper);
+  if (typeof lockApply === 'function') lockApply();
   wireInline();
   wireBoxClick();
   zoomPaper();
@@ -1023,6 +1024,9 @@ async function start() {
   window.addEventListener('resize', checkOverflow);
   if ('serviceWorker' in navigator && location.protocol !== 'file:')
     navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+  // القفل والمزامنة ـ مرّة واحدة عند الإقلاع
+  if (typeof wireSync === 'function') await wireSync();
 
   show('home');
 

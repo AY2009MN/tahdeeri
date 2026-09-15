@@ -455,3 +455,10 @@ svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray
   .cropbox .c-tl{top:-16px;left:-16px} .cropbox .c-tr{top:-16px;right:-16px}
   .cropbox .c-bl{bottom:-16px;left:-16px} .cropbox .c-br{bottom:-16px;right:-16px}
 }
+
+/* ════════ قفل التعديل ════════ */
+body.locked #paper [contenteditable]{cursor:default;background:transparent}
+body.locked .inlbar,body.locked .inlh,body.locked .hctl{display:none!important}
+body.locked #btnLock{background:#8a1f1f;color:#fff;border-color:#8a1f1f}
+#btnLock{font-weight:700}
+@media print{ #btnLock{display:none!important} }

@@ -70,6 +70,7 @@
     <label class="btn">إدراج صورة<input type="file" id="imgFile" accept="image/*" hidden></label>
     <button class="btn" id="btnWorksheet">ورقة العمل</button>
     <button class="btn" id="btnFit" title="تصغير الصور بالقدر اللازم حتى يتّسع المحتوى للصفحتين">اضبط الصفحتين</button>
+    <button class="btn" id="btnLock" title="أدخل الرقم السرّي لفتح التعديل">🔒 مقفل</button>
     <button class="btn" id="btnBlank" title="نموذج تحضير فارغ بلا تاريخ ولا صف ولا حصة ، يُكتب بخطّ اليد">نموذج فارغ</button>
     <button class="btn primary" id="btnPrint">معاينة وطباعة</button>
   </div>
@@ -141,6 +142,33 @@
     <label class="btn">استيراد ملف نقل<input type="file" id="impFile" accept=".daftar,.json,application/json" hidden></label>
   </div>
   <p class="hint" id="genMsg"></p>
+
+  <h2>قفل التعديل</h2>
+  <p class="hint" id="lockState"></p>
+  <div class="toolbar">
+    <button class="btn" id="btnLock2" hidden></button>
+    <button class="btn" id="btnLockChange">تغيير الرقم السرّي</button>
+  </div>
+  <p class="hint">الرقم الابتدائي <b>١٩٨٥</b>. القفل يمنع التعديل على هذا الجهاز فقط ،
+     ويبقى التصفّح والطباعة متاحين. يُحفظ مبصوماً فلا يظهر الرقم نفسه في قاعدة البيانات.</p>
+
+  <h2>المزامنة مع GitHub</h2>
+  <div class="grid2">
+    <label>المستودع <input id="ghRepo" placeholder="AY2009MN/tahdeeri"></label>
+    <label>الفرع <input id="ghBranch" placeholder="main"></label>
+    <label>مسار ملف البيانات <input id="ghPath" placeholder="بيانات/daftar-data.json"></label>
+    <label>رمز الوصول <input id="ghToken" type="password" placeholder="ghp_… يبقى على جهازك"></label>
+  </div>
+  <div class="toolbar">
+    <button class="btn primary" id="btnSyncPush">زامن البيانات والتعديلات مع GitHub</button>
+    <button class="btn" id="btnSyncPull">اجلب من GitHub</button>
+  </div>
+  <p class="hint" id="syncMsg"></p>
+  <p class="hint"><b>مهمّ:</b> رمز الوصول يبقى على هذا الجهاز ولا يُرفع أبداً ـ يُنزع من البيانات قبل رفعها.
+     احصل عليه من GitHub ← Settings ← Developer settings ← Personal access tokens ، بصلاحية
+     <code>Contents: Read and write</code> على هذا المستودع وحده.
+     وانتبه: المستودع عامّ ، فما يُرفع يراه الجميع ـ إن أردت الخصوصية فاجعل المزامنة إلى مستودع خاصّ.</p>
+
 </section>
 
 <!-- ══════════ عارض الدرس مع الالتقاط ══════════ -->
@@ -192,6 +220,7 @@
 <script src="js/inline.js?v=28"></script>
 <script src="js/bookmap.js?v=28"></script>
 <script src="js/books.js?v=28"></script>
+<script src="js/sync.js?v=29"></script>
 <script src="js/app.js?v=28"></script>
 </body>
 </html>
