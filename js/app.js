@@ -114,7 +114,9 @@ function flatten(gid) {
     out.push({
       id: `${gid}|${out.length}`, n: out.length,
       gradeId: gid, gradeName: cur.name, section: cur.section,
-      unitNo: u.no, unitTitle: u.title, standard: u.standard, indicators: u.indicators,
+      unitNo: u.no, unitTitle: u.title,
+      // المعيار ومؤشّر الأداء من جدول الدليل: للدرس إن وُجد ، وإلا فمن الوحدة
+      standard: l.standard || u.standard, indicators: l.indicators || u.indicators,
       code: l.code, title: l.title, pages: l.pages, outcomes: l.outcomes,
       vocab: l.vocab, media: l.media || [],
       partIdx: i + 1, partOf: l.sessions.length,
