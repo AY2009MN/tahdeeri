@@ -30,23 +30,23 @@ jobs:
       - name: ضغط تطبيق الويب
         run: |
           cd 'تحضير-ويب-سريع'
-          zip -r -q '../دفتر-التحضير.zip' . -x 'tools/*' -x '*.pdf' -x '*.daftar'
+          zip -r -q '../daftar-tahdeer.zip' . -x 'tools/*' -x '*.pdf' -x '*.daftar'
           cd ..
-          echo "SIZE=$(du -h 'دفتر-التحضير.zip' | cut -f1)" >> "$GITHUB_ENV"
+          echo "SIZE=$(du -h 'daftar-tahdeer.zip' | cut -f1)" >> "$GITHUB_ENV"
 
       - name: نشر الإصدار
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create latest 'دفتر-التحضير.zip' \
+          gh release create latest 'daftar-tahdeer.zip' \
             --title 'آخر نسخة من دفتر التحضير' \
             --notes "بُنيت تلقائياً من الدفعة ${GITHUB_SHA::7} بتاريخ $(date -u '+%Y-%m-%d %H:%M UTC')"
 
       - name: تحديث بطاقة مجلد التحميل
         run: |
           mkdir -p 'تحميل-نسخة-الهاتف-أو-التاب'
-          LINK='https://github.com/AY2009MN/tahdeeri/releases/latest/download/دفتر-التحضير.zip'
+          LINK='https://github.com/AY2009MN/tahdeeri/releases/latest/download/daftar-tahdeer.zip'
           {
             echo "# تحميل نسخة الهاتف أو التاب"
             echo
@@ -71,7 +71,7 @@ jobs:
             echo "> لا تفتح \`index.html\` بنقرة مزدوجة: المتصفح يمنع التخزين مع عناوين \`file://\` ،"
             echo "> فيعمل التطبيق للعرض والطباعة فقط بلا حفظ."
           } > 'تحميل-نسخة-الهاتف-أو-التاب/README.md'
-          rm -f 'تحميل-نسخة-الهاتف-أو-التاب/دفتر-التحضير.zip'
+          rm -f 'تحميل-نسخة-الهاتف-أو-التاب/'*.zip
 
       - name: دفع البطاقة
         run: |
