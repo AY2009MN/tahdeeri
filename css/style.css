@@ -411,3 +411,47 @@ svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray
 .banner.slim .bx{margin-inline-start:auto;border:0;background:transparent;cursor:pointer;
   font-size:20px;line-height:1;padding:0 6px;color:inherit}
 .banner.slim .bx:hover{opacity:.6}
+
+/* ════════ تحرير الصور: مقابض الأركان ، الوضع الحرّ ، الاقتصاص ════════ */
+
+/* المقابض الأربعة ـ الركن يحدّد اتّجاه السهم */
+.inlh{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #1b4c8c;
+  border-radius:50%;z-index:44;touch-action:none;left:auto;bottom:auto}
+.inlh.h-tl{top:-7px;left:-7px;cursor:nwse-resize}
+.inlh.h-tr{top:-7px;right:-7px;cursor:nesw-resize}
+.inlh.h-bl{bottom:-7px;left:-7px;cursor:nesw-resize}
+.inlh.h-br{bottom:-7px;right:-7px;cursor:nwse-resize}
+
+/* الوضع الحرّ: الصورة تطفو داخل القسم ، تُحرَّك بحرّية وتتراكب بالطبقات */
+.inl.free{position:absolute;right:var(--ix,0);top:var(--iy,0);z-index:var(--iz,10);
+  cursor:move;box-shadow:0 1px 6px #0003}
+.inl.free.sel{outline:2px dashed #1b4c8c}
+.sectwrap{position:relative}
+
+/* طبقة الاقتصاص */
+.cropov{position:fixed;inset:0;background:#0009;z-index:120;touch-action:none}
+.cropbox{position:fixed;border:2px solid #fff;box-shadow:0 0 0 9999px #0007;cursor:move}
+.cropbox .cr{position:absolute;width:16px;height:16px;background:#fff;border:2px solid #1b4c8c;border-radius:3px}
+.cropbox .c-tl{top:-9px;left:-9px;cursor:nwse-resize}
+.cropbox .c-tr{top:-9px;right:-9px;cursor:nesw-resize}
+.cropbox .c-bl{bottom:-9px;left:-9px;cursor:nesw-resize}
+.cropbox .c-br{bottom:-9px;right:-9px;cursor:nwse-resize}
+.cropbar{position:fixed;inset-inline:0;bottom:0;background:#16324f;color:#fff;
+  padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.cropbar span{font-size:13px;color:#cfe0f0}
+
+/* لا يُسحب أيّ شيء داخل الورقة سحباً أصلياً ـ كان يُسقط نسخة ثانية بحجم كامل */
+#paper img,#paper .inl{-webkit-user-drag:none;user-drag:none}
+
+@media print{
+  .cropov{display:none!important}
+  .inl.free{box-shadow:none}
+}
+@media (pointer:coarse){
+  .inlh{width:32px;height:32px;border-width:3px}
+  .inlh.h-tl{top:-16px;left:-16px} .inlh.h-tr{top:-16px;right:-16px}
+  .inlh.h-bl{bottom:-16px;left:-16px} .inlh.h-br{bottom:-16px;right:-16px}
+  .cropbox .cr{width:30px;height:30px}
+  .cropbox .c-tl{top:-16px;left:-16px} .cropbox .c-tr{top:-16px;right:-16px}
+  .cropbox .c-bl{bottom:-16px;left:-16px} .cropbox .c-br{bottom:-16px;right:-16px}
+}

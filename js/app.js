@@ -372,6 +372,7 @@ function renderEditor() {
     });
   });
   wireFigs();
+  if (typeof inlRestoreFree === 'function') inlRestoreFree(paper);
   wireInline();
   wireBoxClick();
   zoomPaper();

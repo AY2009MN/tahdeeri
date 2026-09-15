@@ -160,27 +160,139 @@ function inlDeselect() {
   INL.sel = null;
 }
 
+/* ────────── الصورة المحدَّدة: الشريط والمقابض ──────────
+   المقابض على الأركان الأربعة ، والسحب من داخل الصورة يحرّكها في الوضع الحرّ.
+   يُمنع السحب الأصلي للمتصفح (drag & drop) لأنّه كان يُسقط نسخة ثانية من الصورة
+   بحجم كامل داخل النصّ ـ وهو سبب «تضخّم الصورة عند محاولة تحريكها». */
+const INL_CORNERS = ['tl', 'tr', 'bl', 'br'];
+
 function inlSelect(sp) {
   inlDeselect();
   INL.sel = sp; sp.classList.add('sel');
   const w = +sp.dataset.w || 90;
+  const free = sp.classList.contains('free');
   const bar = document.createElement('div');
   bar.className = 'inlbar no-print';
-  bar.innerHTML = `
-    <button data-ia="w:-5" title="تصغير">−</button><span>${ar(w)}٪</span><button data-ia="w:5" title="تكبير">+</button>
-    <i></i>
-    <button data-ia="al:r" title="يمين" class="${sp.classList.contains('al-r') ? 'on' : ''}">⇥</button>
-    <button data-ia="al:c" title="وسط" class="${sp.classList.contains('al-c') ? 'on' : ''}">≡</button>
-    <button data-ia="al:l" title="يسار" class="${sp.classList.contains('al-l') ? 'on' : ''}">⇤</button>
-    <i></i>
-    <button data-ia="half" title="نصف العرض ـ لوضع صورتين متجاورتين">◫</button>
-    <button data-ia="clean" title="تفريغ الخلفية وقصّ الحواف">▨</button>
-    <button data-ia="up" title="نقل سطراً للأعلى">▲</button>
-    <button data-ia="down" title="نقل سطراً للأسفل">▼</button>
-    <button data-ia="del" title="حذف">🗑</button>`;
+  bar.innerHTML =
+    '<button data-ia="w:-5" title="تصغير">−</button><span>' + ar(w) + '٪</span>' +
+    '<button data-ia="w:5" title="تكبير">+</button><i></i>' +
+    '<button data-ia="al:r" title="يمين" class="' + (sp.classList.contains('al-r') ? 'on' : '') + '">⇥</button>' +
+    '<button data-ia="al:c" title="وسط" class="' + (sp.classList.contains('al-c') ? 'on' : '') + '">≡</button>' +
+    '<button data-ia="al:l" title="يسار" class="' + (sp.classList.contains('al-l') ? 'on' : '') + '">⇤</button><i></i>' +
+    '<button data-ia="half" title="نصف العرض ـ لوضع صورتين متجاورتين">◫</button>' +
+    '<button data-ia="crop" title="اقتصاص جزء من الصورة">✂</button>' +
+    '<button data-ia="clean" title="تفريغ الخلفية وقصّ الحواف">▨</button><i></i>' +
+    '<button data-ia="free" title="تحريك حرّ فوق باقي العناصر" class="' + (free ? 'on' : '') + '">✥</button>' +
+    (free ? '<button data-ia="z:1" title="إلى الأمام">⤒</button><button data-ia="z:-1" title="إلى الخلف">⤓</button>' : '') +
+    '<i></i><button data-ia="up" title="نقل سطراً للأعلى">▲</button>' +
+    '<button data-ia="down" title="نقل سطراً للأسفل">▼</button>' +
+    '<button data-ia="del" title="حذف">🗑</button>';
   sp.appendChild(bar);
-  const h = document.createElement('i'); h.className = 'inlh no-print'; h.title = 'اسحب لتغيير الحجم';
-  sp.appendChild(h);
+  for (const c of INL_CORNERS) {
+    const h = document.createElement('i');
+    h.className = 'inlh no-print h-' + c;
+    h.dataset.corner = c;
+    h.title = 'اسحب لتغيير الحجم';
+    sp.appendChild(h);
+  }
+}
+
+/** الوضع الحرّ: الصورة تُنتزع من مجرى النصّ فتطفو فوقه ويمكن تحريكها بحرّية وتراكبها */
+function inlSetFree(sp, on) {
+  const wrap = sp.closest('.sectwrap');
+  if (on && wrap) {
+    const r = sp.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+    sp.classList.add('free');
+    sp.dataset.x = Math.round(wr.right - r.right);      // المسافة من الحافة اليمنى
+    sp.dataset.y = Math.round(r.top - wr.top);
+    sp.dataset.z = sp.dataset.z || 10;
+  } else {
+    sp.classList.remove('free');
+    delete sp.dataset.x; delete sp.dataset.y; delete sp.dataset.z;
+  }
+  inlApplyFree(sp);
+}
+
+function inlApplyFree(sp) {
+  if (sp.classList.contains('free')) {
+    sp.style.setProperty('--ix', (sp.dataset.x || 0) + 'px');
+    sp.style.setProperty('--iy', (sp.dataset.y || 0) + 'px');
+    sp.style.setProperty('--iz', sp.dataset.z || 10);
+  } else {
+    sp.style.removeProperty('--ix');
+    sp.style.removeProperty('--iy');
+    sp.style.removeProperty('--iz');
+  }
+}
+
+/** يعيد تطبيق الوضع الحرّ بعد إعادة رسم الورقة (القيم محفوظة في data-*) */
+function inlRestoreFree(root) {
+  (root || document).querySelectorAll('.inl.free').forEach(inlApplyFree);
+}
+
+/* ────────── الاقتصاص ────────── */
+function inlCrop(sp) {
+  const img = sp.querySelector('img'); if (!img || !img.naturalWidth) return;
+  const r = img.getBoundingClientRect();
+  const ov = document.createElement('div');
+  ov.className = 'cropov no-print';
+  ov.innerHTML =
+    '<div class="cropbox" style="left:' + (r.left + r.width * 0.1) + 'px;top:' + (r.top + r.height * 0.1) +
+      'px;width:' + (r.width * 0.8) + 'px;height:' + (r.height * 0.8) + 'px">' +
+      '<i class="cr c-tl"></i><i class="cr c-tr"></i><i class="cr c-bl"></i><i class="cr c-br"></i></div>' +
+    '<div class="cropbar"><span>اسحب الإطار أو أركانه لتحديد الجزء المطلوب</span>' +
+      '<button class="btn sm primary" data-cropok>اقتصاص</button>' +
+      '<button class="btn sm" data-cropno>إلغاء</button></div>';
+  document.body.appendChild(ov);
+
+  const box = ov.querySelector('.cropbox');
+  let mv = null;
+  ov.addEventListener('pointerdown', e => {
+    const corner = e.target.closest('.cr');
+    if (!corner && !e.target.closest('.cropbox')) return;
+    e.preventDefault();
+    const b = box.getBoundingClientRect();
+    mv = { corner: corner ? corner.className.replace(/.*c-/, '') : null,
+           x: e.clientX, y: e.clientY, l: b.left, t: b.top, w: b.width, h: b.height };
+    try { ov.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  ov.addEventListener('pointermove', e => {
+    if (!mv) return;
+    const dx = e.clientX - mv.x, dy = e.clientY - mv.y;
+    let l = mv.l, t = mv.t, w = mv.w, h = mv.h;
+    if (!mv.corner) { l += dx; t += dy; }
+    else {
+      if (mv.corner.indexOf('l') > -1) { l += dx; w -= dx; } else { w += dx; }
+      if (mv.corner.indexOf('t') > -1) { t += dy; h -= dy; } else { h += dy; }
+    }
+    w = Math.max(20, Math.min(w, r.width)); h = Math.max(20, Math.min(h, r.height));
+    l = Math.min(Math.max(r.left, l), r.right - w);
+    t = Math.min(Math.max(r.top, t), r.bottom - h);
+    box.style.left = l + 'px'; box.style.top = t + 'px';
+    box.style.width = w + 'px'; box.style.height = h + 'px';
+  });
+  ov.addEventListener('pointerup', () => { mv = null; });
+
+  ov.addEventListener('click', async e => {
+    if (e.target.closest('[data-cropno]')) { ov.remove(); return; }
+    if (!e.target.closest('[data-cropok]')) return;
+    const b = box.getBoundingClientRect();
+    const sx = img.naturalWidth / r.width, sy = img.naturalHeight / r.height;
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(b.width * sx));
+    c.height = Math.max(1, Math.round(b.height * sy));
+    c.getContext('2d').drawImage(img,
+      Math.round((b.left - r.left) * sx), Math.round((b.top - r.top) * sy),
+      c.width, c.height, 0, 0, c.width, c.height);
+    const out = c.toDataURL('image/png');
+    /* المقتصّة تُحفظ أصلاً جديداً حتى لا تتأثّر بقيّة مواضع الصورة نفسها */
+    const id = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    await DB.put('assets', { id, data: out, added: iso(new Date()) });
+    ASSETS[id] = out;
+    img.dataset.asset = id; img.src = out;
+    ov.remove();
+    inlSave(sp);
+  });
 }
 
 function wireInline() {
@@ -199,24 +311,32 @@ function wireInline() {
     const btn = e.target.closest('[data-ia]');
     if (btn && INL.sel) {
       e.preventDefault(); e.stopPropagation();
-      const sp = INL.sel, [a, v] = btn.dataset.ia.split(':');
+      const sp = INL.sel, parts = btn.dataset.ia.split(':'), a = parts[0], v = parts[1];
       const row = sp.parentElement;
-      if (a === 'w') { const w = Math.max(15, Math.min(100, (+sp.dataset.w || 90) + (+v))); sp.dataset.w = w; sp.style.width = w + '%'; }
+      if (a === 'w') { const w = Math.max(10, Math.min(100, (+sp.dataset.w || 90) + (+v))); sp.dataset.w = w; sp.style.width = w + '%'; }
       if (a === 'al') { sp.classList.remove('al-r', 'al-c', 'al-l'); sp.classList.add('al-' + v); }
       if (a === 'half') { const w = +sp.dataset.w > 50 ? 48 : 90; sp.dataset.w = w; sp.style.width = w + '%'; }
+      if (a === 'free') { inlSetFree(sp, !sp.classList.contains('free')); }
+      if (a === 'z') { sp.dataset.z = Math.max(1, Math.min(99, (+sp.dataset.z || 10) + (+v))); inlApplyFree(sp); }
+      if (a === 'crop') { inlCrop(sp); return; }
       if (a === 'clean') {
         const img = sp.querySelector('img'); btn.textContent = '…';
         try {
           const out = await trimImage(await removeWhite(img.src));
           if (img.dataset.asset) { ASSETS[img.dataset.asset] = out; await DB.put('assets', { id: img.dataset.asset, data: out }); }
           img.src = out;
-        } catch { alert('تعذّر تفريغ خلفية هذه الصورة.'); }
+        } catch (err) { alert('تعذّر تفريغ خلفية هذه الصورة.'); }
       }
       if (a === 'up' || a === 'down') {
         const sib = a === 'up' ? row.previousElementSibling : row.nextElementSibling;
-        if (sib) a === 'up' ? sib.before(row) : sib.after(row);
+        if (sib) { a === 'up' ? sib.before(row) : sib.after(row); }
       }
-      if (a === 'del') { const r = sp.parentElement; sp.remove(); if (r.classList.contains('inlrow') && !r.children.length) r.remove(); INL.sel = null; inlSave(r.isConnected ? r : paper.querySelector('.sectbox')); return; }
+      if (a === 'del') {
+        const r = sp.parentElement; sp.remove();
+        if (r.classList.contains('inlrow') && !r.children.length) r.remove();
+        INL.sel = null; inlSave(r.isConnected ? r : paper.querySelector('.sectbox'));
+        return;
+      }
       inlSelect(sp); inlSave(sp);
       return;
     }
@@ -225,33 +345,76 @@ function wireInline() {
     if (!e.target.closest('.inlbar')) inlDeselect();
   });
 
-  /* مقبض الحجم */
+  /* السحب الأصلي يُسقط نسخة ثانية من الصورة داخل النصّ ـ يُمنع في الورقة كلّها */
+  paper.addEventListener('dragstart', e => e.preventDefault());
+  paper.addEventListener('drop', e => {
+    if (e.dataTransfer && [...e.dataTransfer.types].includes('text/html')) e.preventDefault();
+  });
+
+  /* المقابض: تحجيم من الأركان ، وتحريك من داخل الصورة في الوضع الحرّ */
   let drag = null;
   paper.addEventListener('pointerdown', e => {
-    const h = e.target.closest('.inlh'); if (!h) return;
-    e.preventDefault(); e.stopPropagation();
-    const sp = h.closest('.inl'), host = sp.closest('.sectbox');
-    drag = { sp, x0: e.clientX, w0: +sp.dataset.w || 90, W: host.clientWidth };
-    h.setPointerCapture?.(e.pointerId);
+    const h = e.target.closest('.inlh');
+    const sp = e.target.closest('.inl');
+    if (!sp) return;
+    if (h) {
+      e.preventDefault(); e.stopPropagation();
+      const host = sp.closest('.sectbox') || sp.closest('.sectwrap');
+      drag = { mode: 'size', sp: sp, corner: h.dataset.corner || 'bl',
+               x0: e.clientX, w0: +sp.dataset.w || 90, W: (host && host.clientWidth) || 690 };
+      try { paper.setPointerCapture(e.pointerId); } catch (err) {}
+      return;
+    }
+    if (sp.classList.contains('free') && !e.target.closest('.inlbar')) {
+      e.preventDefault(); e.stopPropagation();
+      drag = { mode: 'move', sp: sp, x0: e.clientX, y0: e.clientY,
+               ox: +sp.dataset.x || 0, oy: +sp.dataset.y || 0 };
+      try { paper.setPointerCapture(e.pointerId); } catch (err) {}
+    }
   });
   paper.addEventListener('pointermove', e => {
     if (!drag) return;
-    const dx = drag.x0 - e.clientX;                     // الصفحة من اليمين: السحب يساراً يكبّر
-    const w = Math.max(15, Math.min(100, Math.round(drag.w0 + dx / drag.W * 100)));
-    drag.sp.dataset.w = w; drag.sp.style.width = w + '%';
-    const lbl = drag.sp.querySelector('.inlbar span'); if (lbl) lbl.textContent = ar(w) + '٪';
+    if (drag.mode === 'move') {
+      drag.sp.dataset.x = Math.round(drag.ox - (e.clientX - drag.x0));   // الورقة تُقاس من اليمين
+      drag.sp.dataset.y = Math.round(drag.oy + (e.clientY - drag.y0));
+      inlApplyFree(drag.sp);
+      return;
+    }
+    /* التحجيم: ركن أيسر يكبّر بالسحب يساراً ، وأيمن بالسحب يميناً.
+       الحركة نسبة إلى عرض الصندوق فتتدرّج بنعومة ولا تقفز. */
+    const dxRaw = e.clientX - drag.x0;
+    const dx = drag.corner.indexOf('l') > -1 ? -dxRaw : dxRaw;
+    const w = Math.max(10, Math.min(100, drag.w0 + dx / drag.W * 100));
+    drag.sp.dataset.w = Math.round(w);
+    drag.sp.style.width = w.toFixed(1) + '%';
+    const lbl = drag.sp.querySelector('.inlbar span');
+    if (lbl) lbl.textContent = ar(Math.round(w)) + '٪';
   });
-  paper.addEventListener('pointerup', () => { if (drag) { inlSave(drag.sp); drag = null; } });
+  const endDrag = () => { if (drag) { inlSave(drag.sp); drag = null; } };
+  paper.addEventListener('pointerup', endDrag);
+  paper.addEventListener('pointercancel', endDrag);
 
-  /* مفتاح الحذف على الصورة المحدَّدة */
+  /* لوحة المفاتيح: حذف الصورة ، وتحريكها بالأسهم في الوضع الحرّ */
   document.addEventListener('keydown', e => {
     if (!INL.sel || !document.contains(INL.sel)) return;
+    const sp = INL.sel;
     if (e.key === 'Delete' || e.key === 'Backspace') {
-      e.preventDefault(); const r = INL.sel.parentElement; INL.sel.remove();
+      e.preventDefault();
+      const r = sp.parentElement; sp.remove();
       if (r.classList.contains('inlrow') && !r.children.length) r.remove();
       INL.sel = null; inlSave(r.isConnected ? r : paper.querySelector('.sectbox'));
+      return;
     }
-    if (e.key === 'Escape') inlDeselect();
+    if (e.key === 'Escape') { inlDeselect(); return; }
+    if (sp.classList.contains('free') && e.key.indexOf('Arrow') === 0) {
+      e.preventDefault();
+      const step = e.shiftKey ? 10 : 2;
+      if (e.key === 'ArrowLeft')  sp.dataset.x = (+sp.dataset.x || 0) + step;
+      if (e.key === 'ArrowRight') sp.dataset.x = (+sp.dataset.x || 0) - step;
+      if (e.key === 'ArrowUp')    sp.dataset.y = (+sp.dataset.y || 0) - step;
+      if (e.key === 'ArrowDown')  sp.dataset.y = (+sp.dataset.y || 0) + step;
+      inlApplyFree(sp); inlSave(sp);
+    }
   });
 }
 
