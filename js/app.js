@@ -75,10 +75,10 @@ let saveTimer = null;
 
 const DEFAULTS = {
   id: 'app', teacher: '', school: '', year: '٢٠٢٦/٢٠٢٧', term: 'الأول',
-  start: '2026-09-15', end: '2026-12-31', fontSize: 14,
+  start: '2026-09-14', end: '2026-12-31', fontSize: 14,
   sections: { logo:true, osi:true, vocab:true, media:true, evalTable:true, sign:true },
   holidays: [],
-  ttVersion: 2,
+  ttVersion: 3,
   timetable: {                // weekday(0=الأحد) + رقم الحصة ـ جدول ٢٠٢٦/٢٠٢٧
     '8': [{d:0,p:4},{d:1,p:2},{d:2,p:3},{d:3,p:1},{d:4,p:4}],
     '9': [{d:0,p:5},{d:1,p:4},{d:2,p:2},{d:3,p:2},{d:4,p:2}]
@@ -167,6 +167,20 @@ function applyClass() {
   sessionsIdx[c.g].forEach((x, i) => { x.date = ds[i] ? ds[i].date : null; x.period = ds[i] ? ds[i].period : null; });
 }
 const generateDates = () => { const r = computeDates(); applyClass(); return r; };
+
+/** إعادة توزيع كامل: أيّ تغيير في تاريخ البداية أو النهاية أو الجدول أو العطل
+    يُعيد ترقيم تواريخ الحصص كلّها فوراً ـ بلا حاجة إلى زرّ. */
+async function regenerateAll(msg) {
+  const rep = generateDates();
+  await persistSessions();
+  await DB.put('settings', S);
+  const g = document.getElementById('genMsg');
+  if (g) g.textContent = (msg ? msg + ' ـ ' : '') +
+    S.classes.map(c => `${CURRICULA[c.g].name} ${c.name}: وُزّعت ${ar(rep[c.id] || 0)} حصة`).join(' · ');
+  renderHome();
+  if (!document.getElementById('view-editor').classList.contains('hidden')) renderEditor();
+  return rep;
+}
 
 function fillClassSel() {
   const gs = document.getElementById('gradeSel');
@@ -871,7 +885,7 @@ async function start() {
     const row = e.target.closest('[data-g][data-i]');
     if (row) return openEditor(row.dataset.g, +row.dataset.i, row.dataset.c);
     const hb = e.target.closest('[data-hol]');
-    if (hb) { S.holidays.splice(+hb.dataset.hol, 1); DB.put('settings', S); renderSettings(); }
+    if (hb) { S.holidays.splice(+hb.dataset.hol, 1); renderSettings(); regenerateAll('أُعيد التوزيع بعد حذف العطلة'); }
   });
 
   document.getElementById('prevSes').onclick = () => { curIdx--; renderEditor(); };
@@ -937,10 +951,12 @@ async function start() {
   document.getElementById('nbFilter').onchange = renderNotebook;
 
   ['stTeacher','stSchool','stYear','stTerm','stStart','stEnd'].forEach(id => {
-    document.getElementById(id).onchange = e => {
+    document.getElementById(id).onchange = async e => {
       const key = id.replace('st','').toLowerCase();
-      S[{teacher:'teacher',school:'school',year:'year',term:'term',start:'start',end:'end'}[key]] = e.target.value;
-      DB.put('settings', S);
+      S[key] = e.target.value;
+      await DB.put('settings', S);
+      // تاريخ أول حصة أو آخر يوم: يُعاد توزيع الحصص كلّها على الفور
+      if (id === 'stStart' || id === 'stEnd') await regenerateAll('أُعيد التوزيع');
     };
   });
 
@@ -954,7 +970,7 @@ async function start() {
       const c = S.classes.find(x => x.id === nm.dataset.cname);
       c.name = nm.value.trim() || c.name; fillClassSel();
     } else return;
-    computeDates(); applyClass(); DB.put('settings', S);
+    regenerateAll('أُعيد التوزيع بعد تعديل الجدول');
   });
   document.getElementById('timetable').addEventListener('click', e => {
     const del = e.target.closest('[data-cdel]');
@@ -967,7 +983,7 @@ async function start() {
       if (!name) return alert('اكتب اسم الشعبة، مثل ٨/٢');
       S.classes.push({ id: 'c' + g + '_' + Date.now().toString(36), g, name, tt: [] });
     } else return;
-    computeDates(); applyClass(); fillClassSel(); DB.put('settings', S); renderSettings();
+    fillClassSel(); renderSettings(); regenerateAll('أُعيد التوزيع بعد تعديل الشعب');
   });
 
   document.getElementById('addHol').onclick = () => {
@@ -975,15 +991,10 @@ async function start() {
     if (!d) return;
     S.holidays.push({ date: d, label: document.getElementById('holLabel').value || 'عطلة' });
     document.getElementById('holLabel').value = '';
-    DB.put('settings', S); renderSettings();
+    renderSettings(); regenerateAll('أُعيد التوزيع بعد إضافة العطلة');
   };
 
-  document.getElementById('btnGenerate').onclick = async () => {
-    const rep = generateDates(); await persistSessions();
-    document.getElementById('genMsg').textContent =
-      S.classes.map(c => `${CURRICULA[c.g].name} ${c.name}: وُزّعت ${ar(rep[c.id] || 0)} حصة`).join(' · ');
-    renderHome();
-  };
+  document.getElementById('btnGenerate').onclick = () => regenerateAll();
 
   const exportAll = async withBooks => {
     const data = await DB.dump(withBooks);
