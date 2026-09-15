@@ -1,6 +1,6 @@
 /* خدمة العمل بلا إنترنت — تخزّن ملفات التطبيق محلياً
    الملفات الأساسية تُخزَّن عند التثبيت ، وبقية الملفات (صور الأمثلة ، خطوط PDF) تُخزَّن عند أول طلب. */
-const CACHE = 'daftar-v28';
+const CACHE = 'daftar-v22';
 const ASSETS = ['./','./index.html','./css/style.css','./js/db.js','./js/app.js','./js/figs.js','./js/inline.js',
   './js/books.js','./js/bookmap.js','./js/curriculum8.js','./js/curriculum9.js',
   './vendor/pdf.mjs','./vendor/pdf.worker.mjs','./manifest.webmanifest','./icons/logo.png'];

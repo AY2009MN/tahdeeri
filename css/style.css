@@ -72,8 +72,12 @@ ul.hol button{border:0;background:transparent;color:var(--red);cursor:pointer;fo
 
 /* ═══════════════ ورقة A4 ═══════════════ */
 #paper{padding:14px;display:flex;flex-direction:column;align-items:center;gap:16px}
-.sheet{width:210mm;min-height:297mm;background:#fff;padding:10mm 11mm 10mm 11mm;
+/* الورقة على الشاشة بمقاس A4 الحقيقي تماماً (٢١٠×٢٩٧مم) ، فما تراه هو ما يُطبع حرفياً.
+   ما يتجاوز الصفحة يُقصّ ويظهر تنبيه أحمر ، بدل أن تتمدّد الورقة على الشاشة ثم تُقصّ عند الطباعة. */
+.sheet{width:210mm;height:297mm;overflow:hidden;background:#fff;padding:10mm 11mm 10mm 11mm;
   box-shadow:0 2px 12px #0002;font-size:var(--sheetfs,14px);line-height:1.6;display:flex;flex-direction:column}
+.sheet > *{flex-shrink:0}
+.sheet > .sect.grow{flex:1 1 0;min-height:24mm}
 /* نسخة الطباعة: صفحة A4 ثابتة ، الجداول والمقدمة لا تنضغط ، وصندوق العرض يأخذ الباقي */
 .psheet{height:297mm;overflow:hidden}
 .psheet > *{flex-shrink:0}
@@ -120,15 +124,24 @@ ul.hol button{border:0;background:transparent;color:var(--red);cursor:pointer;fo
 /* ═══════════════ الطباعة ═══════════════ */
 @page{size:A4;margin:0}
 @media print{
+  /* الطباعة تطبع ورقة الشاشة نفسها بمقاس A4 الحقيقي ، فتطابق المعاينة تماماً */
   html,body{background:#fff}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .no-print,.topbar,.view:not(#view-editor){display:none!important}
-  #paper{padding:0;gap:0}
-  #paper{zoom:1!important}
-  body.pbuilt #paper{display:none!important}
-  #printArea{position:static;left:auto;width:auto}
-  .sheet,.wsheet{box-shadow:none;margin:0;page-break-after:always;break-after:page;width:210mm;zoom:1!important}
-  .psheet,.wsheet{height:297mm}
-  .sheet:last-child,.wsheet:last-child{page-break-after:auto}
+  #paper{padding:0;gap:0;zoom:1!important;display:flex!important}
+  #printArea{display:none!important}
+  .sheet,.wsheet{box-shadow:none;margin:0;width:210mm;height:297mm;overflow:hidden;
+    page-break-after:always;break-after:page;zoom:1!important}
+  .sheet:last-child,.wsheet:last-child{page-break-after:auto;break-after:auto}
+  /* وضوح الحبر: بلا شفافية ولا تخفيف ، وحدود سوداء صريحة */
+  .sheet img{opacity:1!important;image-rendering:auto}
+  .sheet td,.sheet th{border-color:#000!important}
+  .lbl{background:#d9d9d9!important;color:#000!important}
+  .val{color:#b00000!important}
+  .valb{color:#123f7a!important}
+  .sectbox,.sectwrap{color:#000!important}
+  .figcap{color:#333!important}
+  .overflowwarn{border-bottom:0!important}
   .wcell{border:1px dashed #aaa}
 }
 /* على الشاشات الأضيق من ورقة A4 تُعرض الورقة بعرض الشاشة حتى تبقى كاملة أمامك،
@@ -373,3 +386,22 @@ svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray
 .fmtbar button:hover{background:#e8eef7}
 .fmtbar i{width:1px;height:22px;background:#d5dbe5;margin:0 4px}
 @media (pointer:coarse){ .fmtbar button{min-width:46px;height:44px;font-size:19px} }
+
+/* ────────── النموذج الفارغ للكتابة اليدوية ──────────
+   أسطر حقيقية بارتفاع ٨ ملم ليتّسع لها خطّ اليد ، وحدود سوداء صريحة تخرج واضحة بالحبر. */
+.rline{height:8mm;border-bottom:1px solid #9aa4b0}
+.rline:last-child{border-bottom:0}
+.rcell{padding:0 2mm}
+/* الأسطر تُرسم بتدرّج متكرّر فتملأ الصندوق مهما كان ارتفاعه ، فلا تفيض أبداً */
+.sectwrap.ruled{display:block;padding:2mm 3mm;overflow:hidden;background-origin:content-box;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 calc(8mm - 1px),#8b97a5 calc(8mm - 1px) 8mm)}
+.sectwrap.ruled.grow{flex:1 1 auto}
+.sheet.blank td{height:8mm}
+.sheet.blank .lbl{font-size:.95em}
+@media print{
+  /* وضوح الحبر في النموذج الفارغ: كل الحدود والأسطر سوداء بلا تدرّج */
+  .sheet.blank,.sheet.blank *{color:#000!important}
+  .sheet.blank td,.sheet.blank th,.sheet.blank .sectwrap,.sheet.blank .secttl{border-color:#000!important}
+  .sheet.blank .rline{border-bottom-color:#000!important}
+  .sheet.blank .sectwrap.ruled{background-image:repeating-linear-gradient(to bottom,transparent 0 calc(8mm - 1px),#000 calc(8mm - 1px) 8mm)!important}
+}

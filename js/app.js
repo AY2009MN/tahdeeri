@@ -360,7 +360,7 @@ function renderEditor() {
   wireFigs();
   wireInline();
   zoomPaper();
-  hydrateAssets(paper).then(() => { checkOverflow(); schedulePrint(); });
+  hydrateAssets(paper).then(() => checkOverflow());
   checkOverflow();
 }
 
@@ -603,11 +603,49 @@ function zoomPaper() {
 }
 window.addEventListener('resize', zoomPaper);
 
-/** تنبيه بصري عند تجاوز المحتوى ارتفاع الصندوق */
-function checkOverflow() {
-  document.querySelectorAll('.sectwrap, .sectbox:not(.nb)').forEach(b => {
-    b.classList.toggle('overflowwarn', b.scrollHeight > b.clientHeight + 4);
+/** ضبط المحتوى على الصفحتين : تُصغَّر صور كل صندوق ممتلئ بأقلّ قدر يكفي لاتّساعه.
+    يعمل عند الطلب فقط ـ لا بعد كل حرف ـ فلا يتجمّد التطبيق. */
+function fitToPages() {
+  let fixed = 0, stuck = 0;
+  document.querySelectorAll('#paper .sectwrap').forEach(w => {
+    const inls = [...w.querySelectorAll('.inl')];
+    const over = () => w.scrollHeight > w.clientHeight + 2;
+    if (!over()) return;
+    if (!inls.length) { stuck++; return; }
+    const base = inls.map(sp => parseFloat(sp.style.width) || +sp.dataset.w || 90);
+    const apply = f => inls.forEach((sp, i) =>
+      sp.style.width = Math.max(18, base[i] * f).toFixed(1) + '%');
+    let lo = 0.25, hi = 1;
+    apply(lo);
+    if (over()) { apply(lo); stuck++; }                 // حتى أصغر حجم لا يكفي
+    else {
+      for (let i = 0; i < 10; i++) { const mid = (lo + hi) / 2; apply(mid); if (over()) hi = mid; else lo = mid; }
+      apply(lo); fixed++;
+    }
+    const box = w.querySelector('[contenteditable][data-f]');
+    if (box) box.dispatchEvent(new Event('input', { bubbles: true }));   // لحفظ العروض الجديدة
   });
+  checkOverflow();
+  const info = document.getElementById('pagesInfo');
+  if (info && !stuck && fixed) info.textContent = `ضُبطت ${ar(fixed)} صناديق ـ الطباعة مطابقة للمعاينة`;
+  if (stuck) alert('بعض الصناديق ما زالت ممتلئة حتى بعد التصغير. احذف عنصراً أو انقله إلى الصفحة الثانية.');
+}
+
+/** تنبيه بصري عند تجاوز المحتوى ارتفاع الصندوق ، مع بيان حالة الطباعة */
+function checkOverflow() {
+  let over = 0;
+  document.querySelectorAll('.sectwrap, .sectbox:not(.nb)').forEach(b => {
+    const bad = b.scrollHeight > b.clientHeight + 4;
+    if (bad) over++;
+    b.classList.toggle('overflowwarn', bad);
+  });
+  const info = document.getElementById('pagesInfo');
+  if (info) {
+    info.textContent = over
+      ? `تنبيه: ${ar(over)} صندوقاً ممتلئاً ـ صغّر صورة أو انقلها إلى الصفحة الثانية`
+      : 'الطباعة مطابقة للمعاينة ـ صفحتان';
+    info.classList.toggle('dirty', over > 0);
+  }
 }
 
 /* ────────── العروض ────────── */
@@ -742,9 +780,18 @@ async function printCurrent(mode) {
     setTimeout(() => renderEditor(), 300);
     return;
   }
+  // نطبع ورقة الشاشة نفسها ـ لا نسخة معاد توزيعها ـ حتى تطابق الطباعة ما تراه تماماً
   clearTimeout(printTimer);
-  await buildPrint();
+  document.body.classList.remove('pbuilt');
+  document.getElementById('printArea').innerHTML = '';
+  paper.style.zoom = 1;
+  figSel = null;
+  renderEditor();
+  await new Promise(r => setTimeout(r, 250));
+  await Promise.all([...paper.querySelectorAll('img')]
+    .map(im => im.decode ? im.decode().catch(() => {}) : 0));
   window.print();
+  setTimeout(zoomPaper, 400);
 }
 
 /* ────────── الإقلاع ────────── */
@@ -819,7 +866,9 @@ async function start() {
 
   document.getElementById('prevSes').onclick = () => { curIdx--; renderEditor(); };
   document.getElementById('nextSes').onclick = () => { curIdx++; renderEditor(); };
+  document.getElementById('btnFit').onclick = () => fitToPages();
   document.getElementById('btnPrint').onclick = () => printCurrent('sheet');
+  document.getElementById('btnBlank').onclick = () => printBlank();
   document.getElementById('btnWorksheet').onclick = () => printCurrent('worksheet');
   document.getElementById('bookList').addEventListener('change', async e => {
     const r = e.target.closest('[data-role]'); if (!r) return;
@@ -871,7 +920,7 @@ async function start() {
     box.dispatchEvent(new Event('input', { bubbles: true }));
   });
   document.getElementById('paper').addEventListener('focusout', e => {
-    if (e.target.closest && e.target.closest('[contenteditable][data-f]')) schedulePrint();
+    if (e.target.closest && e.target.closest('[contenteditable][data-f]')) checkOverflow();
   });
 
   document.getElementById('nbSearch').oninput = renderNotebook;
@@ -967,4 +1016,112 @@ async function start() {
     document.getElementById('bSaveDraft').onclick = () => saveToFile('مسودة');
     document.getElementById('bNoSave').onclick    = e => { unsaved = 0; e.target.closest('.banner').remove(); };
   }
+}
+
+/* ────────── نموذج تحضير فارغ للكتابة اليدوية ──────────
+   نفس القالب الرسمي بلا تاريخ ولا صف ولا رقم حصة ولا محتوى ،
+   مع أسطر مسطَّرة في كل قسم ليكتب عليها المعلّم بخطّ يده.
+   يُطبع بحدود سوداء صريحة حتى يخرج واضحاً بالحبر. */
+function blankRows(n) {
+  return Array.from({ length: n }, () => '<div class="rline"></div>').join('');
+}
+
+function blankSheetHTML() {
+  const evalRows = [1, 2, 3].map(() =>
+    '<tr>' + '<td>&nbsp;</td>'.repeat(5) + '</tr>').join('');
+  return `
+  <div class="sheet blank" data-page="1">
+    <div class="hdrwrap">
+      <table>
+        <tr><td class="lbl">اليوم والتاريخ</td><td class="lbl">الصف</td><td class="lbl">الحصة</td></tr>
+        <tr style="height:9mm"><td></td><td></td><td></td></tr>
+      </table>
+      ${on('logo') ? '<div class="logobox"><img src="icons/logo.png" alt="" onerror="this.style.display=&quot;none&quot;"></div>' : ''}
+    </div>
+
+    <table style="margin-top:2mm">
+      <tr>
+        <td class="lbl" style="width:13%">الوحدة</td><td class="lbl" style="width:30%">المجال</td>
+        <td class="lbl" style="width:16%">البند</td><td class="lbl" style="width:41%">عنوان الدرس</td>
+      </tr>
+      <tr style="height:9mm"><td></td><td></td><td></td><td></td></tr>
+    </table>
+
+    <table style="margin-top:1mm">
+      <tr><td class="lbl" style="width:34%">نواتج التعلم</td>
+          <td class="lbl" style="width:33%">المعيار</td>
+          <td class="lbl" style="width:33%">مؤشرات الأداء</td></tr>
+      <tr><td class="rcell">${blankRows(3)}</td><td class="rcell">${blankRows(3)}</td><td class="rcell">${blankRows(3)}</td></tr>
+    </table>
+
+    <table style="margin-top:1mm">
+      <tr><td class="lbl" style="width:22%">العبارات والمفردات :</td>
+          <td class="rcell">${blankRows(2)}</td></tr>
+    </table>
+
+    <table style="margin-top:1mm">
+      <tr>
+        <td class="lbl" style="width:22%">الوسائل التعليمية</td>
+        <td class="lbl" style="width:13%">الكتاب</td>
+        <td style="height:8mm"></td><td></td><td></td>
+      </tr>
+    </table>
+
+    <div class="sect" style="margin-top:3mm">
+      <div class="secttl">المقدمة والتمهيد</div>
+      <div class="sectwrap ruled" style="min-height:26mm"></div>
+    </div>
+
+    <div class="sect grow">
+      <div class="secttl">العرض</div>
+      <div class="sectwrap ruled grow"></div>
+    </div>
+  </div>
+
+  <div class="sheet blank" data-page="2">
+    <div class="sect grow">
+      <div class="secttl">تابع العرض</div>
+      <div class="sectwrap ruled grow"></div>
+    </div>
+
+    <div class="sect">
+      <div class="secttl">الخاتمة والتقييم</div>
+      <div class="sectwrap ruled" style="min-height:18mm"></div>
+    </div>
+
+    <div class="sect">
+      <div class="secttl">التقويم</div>
+      <div class="sectwrap ruled" style="min-height:26mm"></div>
+    </div>
+
+    <table style="margin-top:2mm">
+      <tr>
+        <td class="lbl" style="width:10%">الصف</td>
+        <td class="lbl" style="width:24%">مدى تحقق نواتج التعلم</td>
+        <td class="lbl" style="width:26%">ملائمة التحضير مع زمن الحصة</td>
+        <td class="lbl" style="width:26%">فعالية الوسائل التعليمية المستخدمة</td>
+        <td class="lbl" style="width:14%">التطبيق</td>
+      </tr>
+      ${evalRows}
+    </table>
+
+    <div class="sign">معلّم المادة: ……………………</div>
+  </div>`;
+}
+
+/** يطبع نسخاً فارغة من القالب ـ العدد يختاره المعلّم */
+async function printBlank() {
+  const ans = prompt('كم نسخة فارغة تريد طباعتها؟ (كل نسخة صفحتان)', '1');
+  if (ans === null) return;
+  const n = Math.max(1, Math.min(20, parseInt(ans, 10) || 1));
+  clearTimeout(printTimer);
+  document.body.classList.remove('pbuilt');
+  document.getElementById('printArea').innerHTML = '';
+  const paper = document.getElementById('paper');
+  paper.style.zoom = 1;
+  figSel = null;
+  paper.innerHTML = blankSheetHTML().repeat(n);
+  await new Promise(r => setTimeout(r, 200));
+  window.print();
+  setTimeout(() => { renderEditor(); zoomPaper(); }, 400);
 }
