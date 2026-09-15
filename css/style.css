@@ -405,3 +405,9 @@ svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray
   .sheet.blank .rline{border-bottom-color:#000!important}
   .sheet.blank .sectwrap.ruled{background-image:repeating-linear-gradient(to bottom,transparent 0 calc(8mm - 1px),#000 calc(8mm - 1px) 8mm)!important}
 }
+
+/* شريط التنبيه المختصر عند فتح التطبيق بلا حفظ دائم */
+.banner.slim{padding:6px 12px;font-size:.92em;display:flex;align-items:center;gap:8px}
+.banner.slim .bx{margin-inline-start:auto;border:0;background:transparent;cursor:pointer;
+  font-size:20px;line-height:1;padding:0 6px;color:inherit}
+.banner.slim .bx:hover{opacity:.6}

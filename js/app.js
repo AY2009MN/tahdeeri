@@ -399,9 +399,19 @@ async function saveToFile(kind) {
   if (st) { st.textContent = 'حُفظ في ملف'; st.classList.remove('dirty'); }
 }
 
-/* حارس الإغلاق: يمنع ضياع العمل عندما يكون الحفظ الدائم معطّلاً */
+/* حارس الإغلاق: يمنع ضياع العمل عندما يكون الحفظ الدائم معطّلاً.
+   المتصفح لا يسمح بأزرار داخل نافذة الإغلاق ، فنكتفي بتحذيره ؛ فإن اختار المعلّم
+   البقاء في الصفحة ظهر له شريط الحفظ عندئذٍ ـ لا عند فتح التطبيق. */
 window.addEventListener('beforeunload', e => {
-  if (DB.noStore && unsaved > 0) { e.preventDefault(); e.returnValue = ''; }
+  if (DB.noStore && unsaved > 0) {
+    e.preventDefault(); e.returnValue = '';
+    setTimeout(() => { if (!document.hidden) showSaveBar(); }, 60);
+  }
+});
+
+/* تبديل التبويب أو إخفاء النافذة مع عمل غير محفوظ: يُهيَّأ الشريط ليجده عند العودة */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && DB.noStore && unsaved > 0) showSaveBar();
 });
 
 /** صور الأمثلة: قصاصات من كتاب الطالب + أيّ صورة يدرجها المعلّم.
@@ -1001,21 +1011,32 @@ async function start() {
 
   show('home');
 
-  // تنبيه إن كان التطبيق يعمل بلا حفظ دائم (فُتح الملف مباشرة بدل تشغيل الخادم)
+  // تنبيه إن كان التطبيق يعمل بلا حفظ دائم (فُتح الملف مباشرة بدل تشغيل الخادم).
+  // سطر واحد فقط عند البدء ، يختفي وحده ـ أمّا اختيار الحفظ فيظهر عند محاولة إغلاق التبويب.
   if (DB.noStore) {
     banner(
-      `<b>التطبيق يعمل الآن بلا حفظ دائم.</b> فتحتَ الملف مباشرة، والمتصفح يمنع التخزين في هذه الحالة.
-       يمكنك التصفّح والكتابة والطباعة، لكنّ ما تكتبه يبقى في الذاكرة فقط.<br>
-       للحفظ الدائم أغلق هذه الصفحة وشغّل <code>تشغيل التطبيق.cmd</code> داخل المجلد نفسه.
-       <div class="banner-actions">
-         <button class="btn primary" id="bSaveFile">حفظ عملي في ملف</button>
-         <button class="btn" id="bSaveDraft">حفظ مسودة مؤقتة</button>
-         <button class="btn" id="bNoSave">متابعة بلا حفظ</button>
-       </div>`, 'warn');
-    document.getElementById('bSaveFile').onclick  = () => saveToFile('نسخة');
-    document.getElementById('bSaveDraft').onclick = () => saveToFile('مسودة');
-    document.getElementById('bNoSave').onclick    = e => { unsaved = 0; e.target.closest('.banner').remove(); };
+      `<b>بلا حفظ دائم.</b> فتحتَ الملف مباشرة ، فما تكتبه يبقى في الذاكرة فقط.
+       للحفظ الدائم شغّل <code>تشغيل التطبيق.cmd</code> أو افتح نسخة الويب.
+       <button class="bx" title="إخفاء">×</button>`, 'warn slim');
+    const b = document.querySelector('.banner.slim');
+    b.querySelector('.bx').onclick = () => b.remove();
+    setTimeout(() => b.remove(), 12000);
   }
+}
+
+/** اختيار الحفظ ـ لا يظهر إلا عند محاولة إغلاق التبويب أو المتصفح والعمل غير محفوظ */
+function showSaveBar() {
+  if (document.querySelector('.banner.savebar')) return;
+  banner(
+    `<b>عملك لم يُحفظ بعد.</b> اختر قبل الإغلاق:
+     <div class="banner-actions">
+       <button class="btn primary" id="bSaveFile">حفظ عملي في ملف</button>
+       <button class="btn" id="bSaveDraft">حفظ مسودة مؤقتة</button>
+       <button class="btn" id="bNoSave">متابعة بلا حفظ</button>
+     </div>`, 'warn savebar');
+  document.getElementById('bSaveFile').onclick  = () => saveToFile('نسخة');
+  document.getElementById('bSaveDraft').onclick = () => saveToFile('مسودة');
+  document.getElementById('bNoSave').onclick    = e => { unsaved = 0; e.target.closest('.banner').remove(); };
 }
 
 /* ────────── نموذج تحضير فارغ للكتابة اليدوية ──────────
