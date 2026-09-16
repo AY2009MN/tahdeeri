@@ -356,6 +356,56 @@ function openEditor(gid, idx, clsId) {
   show('editor');
 }
 
+/** قوائم الوحدة والدرس والحصة في شريط المحرّر ـ تتبع الحصة المفتوحة */
+function fillPicker() {
+  const list = sessionsIdx[grade] || []; const cur = list[curIdx]; if (!cur) return;
+  const U = document.getElementById('unitSel'), Ls = document.getElementById('lessonSel'), P = document.getElementById('partSel');
+  if (!U || !Ls || !P) return;
+
+  const units = [...new Set(list.map(s => s.unitNo))];
+  U.innerHTML = units.map(u => {
+    const t = list.find(s => s.unitNo === u).unitTitle;
+    return `<option value="${esc(u)}" ${u === cur.unitNo ? 'selected' : ''}>الوحدة ${esc(u)} ـ ${esc(t)}</option>`;
+  }).join('');
+
+  const lessons = [...new Set(list.filter(s => s.unitNo === cur.unitNo).map(s => s.code))];
+  Ls.innerHTML = lessons.map(code => {
+    const t = list.find(s => s.code === code).title;
+    return `<option value="${esc(code)}" ${code === cur.code ? 'selected' : ''}>${esc(code)} ${esc(t)}</option>`;
+  }).join('');
+
+  const parts = list.filter(s => s.code === cur.code);
+  P.innerHTML = parts.map(s =>
+    `<option value="${s.n}" ${s.n === cur.n ? 'selected' : ''}>الحصة ${ar(s.partIdx)} من ${ar(s.partOf)}</option>`).join('');
+}
+
+/** أوّل حصة في وحدة أو درس */
+function firstOf(pred) {
+  const i = (sessionsIdx[grade] || []).findIndex(pred);
+  return i < 0 ? curIdx : i;
+}
+
+/** حصة اليوم إن وُجدت ، وإلا أقرب حصة قادمة ، وإلا آخر حصة مضت */
+function todayIdx(gid) {
+  const list = sessionsIdx[gid] || []; const t = iso(new Date());
+  const same = list.findIndex(s => s.date === t);
+  if (same >= 0) return same;
+  const next = list.findIndex(s => s.date && s.date > t);
+  if (next >= 0) return next;
+  for (let i = list.length - 1; i >= 0; i--) if (list[i].date) return i;
+  return 0;
+}
+
+/** يفتح تحضير اليوم ـ يبحث في شعب المعلّم كلّها عن حصة تاريخها اليوم */
+function openToday() {
+  const t = iso(new Date());
+  for (const c of (S.classes || [])) {
+    const i = (classDates[c.id] || []).findIndex(d => d && d.date === t);
+    if (i >= 0) { openEditor(c.g, i, c.id); return true; }
+  }
+  curIdx = todayIdx(grade); show('editor'); return false;
+}
+
 function renderEditor() {
   const list = sessionsIdx[grade];
   curIdx = Math.max(0, Math.min(curIdx, list.length - 1));
@@ -378,6 +428,7 @@ function renderEditor() {
   if (typeof lockApply === 'function') lockApply();
   wireInline();
   wireBoxClick();
+  fillPicker();
   zoomPaper();
   hydrateAssets(paper).then(() => checkOverflow());
   checkOverflow();
@@ -893,6 +944,10 @@ async function start() {
     if (hb) { S.holidays.splice(+hb.dataset.hol, 1); renderSettings(); regenerateAll('أُعيد التوزيع بعد حذف العطلة'); }
   });
 
+  document.getElementById('unitSel').onchange = e => { curIdx = firstOf(s => s.unitNo === e.target.value); renderEditor(); };
+  document.getElementById('lessonSel').onchange = e => { curIdx = firstOf(s => s.code === e.target.value); renderEditor(); };
+  document.getElementById('partSel').onchange = e => { curIdx = +e.target.value; renderEditor(); };
+  document.getElementById('btnToday').onclick = () => openToday();
   document.getElementById('prevSes').onclick = () => { curIdx--; renderEditor(); };
   document.getElementById('nextSes').onclick = () => { curIdx++; renderEditor(); };
   document.getElementById('btnFit').onclick = () => fitToPages();
@@ -1025,10 +1080,13 @@ async function start() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:')
     navigator.serviceWorker.register('sw.js').catch(()=>{});
 
+  // يفتح التطبيق على تحضير اليوم مباشرة ، أو أقرب حصة قادمة إن كان اليوم عطلة
+  openToday();
+
   // القفل والمزامنة ـ مرّة واحدة عند الإقلاع
   if (typeof wireSync === 'function') await wireSync();
 
-  show('home');
+  // التطبيق فُتح على تحضير اليوم ، فلا نعيد الرئيسية فوقه
 
   // تنبيه إن كان التطبيق يعمل بلا حفظ دائم (فُتح الملف مباشرة بدل تشغيل الخادم).
   // سطر واحد فقط عند البدء ، يختفي وحده ـ أمّا اختيار الحفظ فيظهر عند محاولة إغلاق التبويب.

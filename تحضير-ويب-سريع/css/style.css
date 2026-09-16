@@ -462,3 +462,11 @@ body.locked .inlbar,body.locked .inlh,body.locked .hctl{display:none!important}
 body.locked #btnLock{background:#8a1f1f;color:#fff;border-color:#8a1f1f}
 #btnLock{font-weight:700}
 @media print{ #btnLock{display:none!important} }
+
+/* ════════ اختيار الوحدة والدرس والحصة ════════ */
+.pick{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pick select{font:inherit;font-size:.92em;padding:5px 6px;border:1px solid var(--line);
+  border-radius:7px;background:#fff;color:inherit;max-width:230px}
+.pick select:focus{outline:2px solid var(--blue);outline-offset:1px}
+@media print{ .pick{display:none!important} }
+@media (pointer:coarse){ .pick select{min-height:38px;font-size:15px} }
