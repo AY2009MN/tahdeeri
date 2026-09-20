@@ -29,6 +29,13 @@ const GH = {
     return r.text();
   },
 
+  /** بيانات المستودع ـ منها هل هو عامّ يراه الناس */
+  async info() {
+    const c = this.cfg;
+    const r = await this.api(c.repo, c.token);
+    return r.ok ? r.json() : null;
+  },
+
   /** ٤٠٤ من واجهة المحتويات تحتمل معنيين : الملفّ لم يُرفع بعد ، أو المستودع
       نفسه لا يصل إليه الرمز ـ فـ GitHub يخفي وجود ما لا تملك رؤيته ويردّ ٤٠٤.
       الخلط بينهما يجعل «اجلب» يقول «لا توجد نسخة مرفوعة» وهي موجودة ،
@@ -68,10 +75,29 @@ const GH = {
       method: 'PUT',
       body: JSON.stringify({ message: msg, content: btoa(bin), branch: c.branch, ...(sha ? { sha } : {}) })
     });
-    if (!r.ok) throw new Error('تعذّر الرفع: ' + r.status + ' ' + (await r.text()).slice(0, 160));
+    if (!r.ok) throw new Error(await writeError(r, c));
     return r.json();
   }
 };
+
+/** رسالة مفهومة لفشل الرفع ـ الرقم وحده لا يدلّ المعلّم على ما يفعل.
+    ٤٠٣ خاصّةً هي الفخّ : القراءة تنجح (المستودعات العامّة يقرأها أيّ رمز
+    صالح) ثمّ يفشل الرفع ، فيظنّ أنّ المزامنة تمّت. */
+async function writeError(r, c) {
+  const body = (await r.text()).slice(0, 200);
+  const head = `تعذّر الرفع إلى «${c.repo}» (${r.status}).\n\n`;
+  if (r.status === 403) return head +
+    'الرمز لا يملك صلاحية الكتابة في هذا المستودع.\n' +
+    'تأكّد أنّ صلاحيته Contents: Read and write ، وأنّه يشمل هذا المستودع بعينه.';
+  if (r.status === 404) return head +
+    'المستودع أو الفرع غير موجود ، أو الرمز لا يصل إليه.\n' +
+    `تأكّد من اسم المستودع ومن أنّ الفرع «${c.branch}» موجود.`;
+  if (r.status === 409 || r.status === 422) return head +
+    'النسخة في المستودع تغيّرت من جهاز آخر.\n' +
+    'أعِد المحاولة ـ وإن تكرّر فاجلب أوّلاً ثمّ ارفع.';
+  if (r.status === 401) return 'رمز الوصول غير صحيح أو انتهت صلاحيته.';
+  return head + body;
+}
 
 /** ينزع رمز الوصول من البيانات قبل رفعها ـ لا يُرفع الرمز أبداً */
 function stripToken(dump) {

@@ -28,11 +28,23 @@ async function askSecret(action) {
   return true;
 }
 
+/** المستودع العامّ يراه الناس ، والمزامنة ترفع التحضيرات وصور الكتاب.
+    فلا يُرفع إليه إلّا بإقرار صريح ـ لا بسهو في خانة اسم المستودع. */
+async function confirmPublic() {
+  const info = await GH.info();
+  if (!info || info.private) return true;
+  return confirm(
+    `تنبيه: المستودع «${GH.cfg.repo}» عامّ ـ يراه أيّ أحد على الإنترنت.\n\n` +
+    'سيُنشر ما ترفعه : تحضيراتك وصور الكتاب المدرجة فيها.\n\n' +
+    'موافق : ارفع على كلّ حال.\nإلغاء : أعود لأضع مستودعاً خاصّاً.');
+}
+
 async function syncPush() {
   if (!GH.cfg.token) return alert('أدخل رمز الوصول أوّلاً في خانة «رمز الوصول».');
   if (!await askSecret('لرفع تعديلاتك إلى GitHub')) return;
   try {
     syncMsg('جارٍ التجهيز…');
+    if (!await confirmPublic()) return syncMsg('');
     const dump = stripToken(await DB.dump(false));      // بلا كتب PDF ـ حجمها كبير
     dump.syncedAt = new Date().toISOString();
     dump.device = navigator.userAgent.slice(0, 60);
