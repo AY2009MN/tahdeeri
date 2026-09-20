@@ -29,7 +29,7 @@
     'inline/inline-crop', 'inline/inline-wire',
     'sheet/sheet-head', 'sheet/sheet-body', 'sheet/blank',
     'editor/viewmode', 'editor/flow', 'editor/fit', 'editor/editor', 'editor/print',
-    'studio/studio-shell', 'studio/studio-gallery', 'studio/studio-pdf',
+    'studio/studio-shell', 'studio/studio-gallery', 'studio/studio-pdf', 'studio/studio-render',
     'studio/studio-capture', 'studio/studio-wire', 'studio/studio-manage',
     'views/views', 'views/library', 'views/settings',
     'app/lock', 'app/sync', 'app/morepanel',

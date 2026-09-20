@@ -1,7 +1,7 @@
-/* ═══ صفحات كتاب الطالب ═══
+/* ═══ صفحات كتاب الطالب : التحميل وشريط الأدوات ═══
+   (رسم الصفحات وردّ ذاكرتها في studio-render.js)
    يفتح العارض على صفحات الدرس وحدها (مع «كل الكتاب» عند الحاجة) ،
-   ويمكن تصحيح بداية الدرس ونهايته فتُحفظ في الإعدادات.
-   الرسم كسول : تُهيَّأ الإطارات بمقاسها وتُرسم الصفحة عند اقترابها من الشاشة. */
+   ويمكن تصحيح بداية الدرس ونهايته فتُحفظ في الإعدادات. */
 
 let PDFJS = null;
 let bk = { id: null, doc: null, name: '', scale: 1.5, lesson: null,
@@ -91,48 +91,4 @@ function bookBar() {
     <button class="btn sm" id="stZin" title="تكبير">+</button>
     <button class="btn sm" id="stSetFrom" title="اجعل الصفحة الظاهرة بداية الدرس">بداية هنا</button>
     <button class="btn sm" id="stSetTo" title="اجعل الصفحة الظاهرة نهاية الدرس">نهاية هنا</button>`;
-}
-
-async function drawBookPages() {
-  const host = byId('stPages');
-  host.innerHTML = '';
-  pageObserver?.disconnect();
-  const from = bk.all ? 1 : bk.from, to = bk.all ? bk.doc.numPages : bk.to;
-  const vp0 = (await bk.doc.getPage(from)).getViewport({ scale: bk.scale });
-  const token = (bk.drawToken = Math.random());
-
-  pageObserver = new IntersectionObserver(
-    es => es.forEach(en => { if (en.isIntersecting) renderBookPage(en.target, token); }),
-    { root: byId('stPaneP' + 'df') || host.parentElement, rootMargin: '900px 0px' });
-
-  for (let p = from; p <= to; p++) {
-    const wrap = document.createElement('div');
-    wrap.className = 'vpagewrap';
-    wrap.dataset.p = p;
-    wrap.style.width = Math.round(vp0.width) + 'px';
-    wrap.style.height = Math.round(vp0.height) + 'px';
-    wrap.innerHTML = `<span class="vpno">ص ${ar(printedPage(p))}</span>`;
-    host.appendChild(wrap);
-    pageObserver.observe(wrap);
-  }
-}
-
-async function renderBookPage(wrap, token) {
-  if (wrap.dataset.done) return;
-  wrap.dataset.done = '1';
-  const page = await bk.doc.getPage(+wrap.dataset.p);
-  if (token !== bk.drawToken) return;
-  const vp = page.getViewport({ scale: bk.scale });
-  const dpr = Math.min(2.5, (window.devicePixelRatio || 1) * 1.5);   // دقّة أعلى لقصّ حادّ
-  const cv = document.createElement('canvas');
-  cv.width = Math.round(vp.width * dpr); cv.height = Math.round(vp.height * dpr);
-  cv.style.width = Math.round(vp.width) + 'px';
-  cv.style.height = Math.round(vp.height) + 'px';
-  cv.className = 'vpage'; cv.dataset.p = wrap.dataset.p;
-  const cx = cv.getContext('2d');
-  cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
-  await page.render({ canvasContext: cx, viewport: page.getViewport({ scale: bk.scale * dpr }) }).promise;
-  page.cleanup();
-  wrap.style.height = '';
-  wrap.prepend(cv);
 }

@@ -44,6 +44,16 @@
   .st-cell img{height:80px}
   .st-item{flex-wrap:wrap}
   .st-item .acts{flex:1 0 100%;justify-content:flex-start}
+
+  /* شريط صفحات الكتاب : صفّ واحد يُمرَّر أفقياً بدل أربعة صفوف تلتهم ٤٠٪
+     من الشاشة ، فتبقى صفحة الكتاب هي الأكبر ـ وهي المقصودة. */
+  #stBarPdf{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    padding-block:7px;scrollbar-width:none}
+  #stBarPdf::-webkit-scrollbar{display:none}
+  #stBarPdf>*{flex:0 0 auto}
+  #stBarPdf .spacer{display:none}
+  #stBarPdf select{max-width:150px}
+  #stBarPdf .meta{white-space:nowrap}
 }
 
 /* ── تاب : ٦٤١ إلى ١٠٢٣ ── */
