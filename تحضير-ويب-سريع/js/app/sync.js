@@ -1,70 +1,5 @@
-/* ═══ المزامنة مع GitHub ═══
-   ترفع بياناتك (التحضيرات واللقطات والإعدادات) ملفاً واحداً في المستودع ،
-   وتجلبها في أيّ جهاز آخر. تحتاج رمز وصول شخصياً بصلاحية contents.
-   الرمز يبقى على جهازك وحده ولا يُرفع أبداً ـ يُنزع من البيانات قبل الرفع. */
-
-/* المستودع الافتراضي خاصّ لا عامّ : المزامنة ترفع التحضيرات وصور الكتاب ،
-   فلا يصحّ أن يكون المقصد الافتراضي مستودعاً يراه الناس. من غيّره يبقى على
-   اختياره ، فالقيمة المحفوظة تسبق الافتراضية. */
-const DEFAULT_REPO = 'AY2009MN/tahdeeri-data';
-
-const GH = {
-  get cfg() {
-    const g = S.gh || {};
-    return { repo: g.repo || DEFAULT_REPO, branch: g.branch || 'main',
-             path: g.path || 'بيانات/daftar-data.json', token: g.token || '' };
-  },
-  api(path, token, opts = {}) {
-    return fetch('https://api.github.com/repos/' + path, {
-      ...opts,
-      headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token,
-                 'X-GitHub-Api-Version': '2022-11-28', ...(opts.headers || {}) }
-    });
-  },
-  /** ملفّ فوق ميجابايت واحد تعيده واجهة «المحتويات» بلا محتوى
-      (encoding: none) ، فيُجلب من مخزن الكائنات الذي يتّسع حتى ١٠٠ ميجابايت.
-      لولا ذلك لتعطّلت المزامنة كلّها بمجرّد تجاوز البيانات ميجابايت واحداً. */
-  async blob(sha) {
-    const c = this.cfg;
-    const r = await this.api(`${c.repo}/git/blobs/${sha}`, c.token,
-      { headers: { Accept: 'application/vnd.github.raw' } });
-    if (!r.ok) throw new Error('تعذّر جلب البيانات الكبيرة: ' + r.status);
-    return r.text();
-  },
-
-  /** يقرأ الملف البعيد ـ يعيد {data, sha} أو {data:null} إن لم يكن موجوداً */
-  async read() {
-    const c = this.cfg;
-    const r = await this.api(`${c.repo}/contents/${encodeURI(c.path)}?ref=${encodeURIComponent(c.branch)}`, c.token);
-    if (r.status === 404) return { data: null, sha: null };
-    if (!r.ok) throw new Error('تعذّر القراءة: ' + r.status + ' ' + (await r.text()).slice(0, 120));
-    const j = await r.json();
-    const text = j.encoding === 'base64'
-      ? new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g, '')), ch => ch.charCodeAt(0)))
-      : await this.blob(j.sha);
-    try { return { data: JSON.parse(text), sha: j.sha }; }
-    catch { throw new Error('ملف البيانات في المستودع غير صالح ـ لعلّه عُدّل أو رُفع بغير هذا التطبيق.'); }
-  },
-  async write(obj, sha, msg) {
-    const c = this.cfg;
-    const bytes = new TextEncoder().encode(JSON.stringify(obj));
-    let bin = '';
-    bytes.forEach(b => bin += String.fromCharCode(b));
-    const r = await this.api(`${c.repo}/contents/${encodeURI(c.path)}`, c.token, {
-      method: 'PUT',
-      body: JSON.stringify({ message: msg, content: btoa(bin), branch: c.branch, ...(sha ? { sha } : {}) })
-    });
-    if (!r.ok) throw new Error('تعذّر الرفع: ' + r.status + ' ' + (await r.text()).slice(0, 160));
-    return r.json();
-  }
-};
-
-/** ينزع رمز الوصول من البيانات قبل رفعها ـ لا يُرفع الرمز أبداً */
-function stripToken(dump) {
-  const out = JSON.parse(JSON.stringify(dump));
-  (out.settings || []).forEach(s => { if (s.gh) delete s.gh.token; });
-  return out;
-}
+/* ═══ المزامنة : متى نرفع ونجلب ، ومن يأذن ═══
+   (واجهة GitHub نفسها في js/app/github.js) */
 
 const syncMsg = t => setText('syncMsg', t);
 
@@ -81,9 +16,21 @@ function confirmSize(bytes) {
     'إن كنت على بيانات الهاتف فقد يستهلك ذلك رصيدك.\n\nأتريد المتابعة؟');
 }
 
+/** ═══ بوّابة المزامنة ═══
+    لا يخرج تعديل إلى الإنترنت ولا يُستبدل جهاز إلّا بالرقم السرّي ، يُسأل عنه
+    في كلّ مرّة. لا يكفي أن يكون قفل التحرير مفتوحاً : فتحه مرّة للكتابة كان
+    يبيح الرفع بعدها بلا سؤال. الرقم هو رقم القفل نفسه (١٩٨٥ ابتداءً) ، يُغيَّر
+    من «تغيير الرقم السرّي» في الإعدادات ، ويُحفظ مبصوماً لا نصّاً. */
+async function askSecret(action) {
+  const code = prompt(`الرقم السرّي ${action} :`);
+  if (code === null) return false;
+  if (await sha256(code) !== S.lockHash) { alert('رقم غير صحيح ـ أُلغيت العملية.'); return false; }
+  return true;
+}
+
 async function syncPush() {
   if (!GH.cfg.token) return alert('أدخل رمز الوصول أوّلاً في خانة «رمز الوصول».');
-  if (!LOCK.open) return alert('افتح القفل بالرقم السرّي قبل الرفع.');
+  if (!await askSecret('لرفع تعديلاتك إلى GitHub')) return;
   try {
     syncMsg('جارٍ التجهيز…');
     const dump = stripToken(await DB.dump(false));      // بلا كتب PDF ـ حجمها كبير
@@ -109,6 +56,8 @@ async function syncPull() {
     if (!confirm(`سيستبدل هذا كلّ ما على هذا الجهاز بالنسخة المرفوعة (${when}). أتريد المتابعة؟`)) {
       return syncMsg('');
     }
+    // الجلب يمحو عمل هذا الجهاز ، فيُسأل عن الرقم كما يُسأل عند الرفع
+    if (!await askSecret('لاستبدال ما على هذا الجهاز')) return syncMsg('');
     const keepToken = (S.gh || {}).token;               // الرمز محلّي ـ لا يأتي من المستودع
     await DB.restore(data);
     S = (await DB.get('settings', 'app')) || S;

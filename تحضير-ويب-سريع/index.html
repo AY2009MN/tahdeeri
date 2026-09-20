@@ -193,14 +193,17 @@
     <label>رمز الوصول <input id="ghToken" type="password" placeholder="ghp_… يبقى على جهازك"></label>
   </div>
   <div class="toolbar">
-    <button class="btn primary" id="btnSyncPush">زامن مع GitHub</button>
-    <button class="btn" id="btnSyncPull">اجلب من GitHub</button>
+    <button class="btn primary" id="btnSyncPush" title="يسأل عن الرقم السرّي قبل الرفع">🔐 زامن مع GitHub</button>
+    <button class="btn" id="btnSyncPull" title="يسأل عن الرقم السرّي قبل الاستبدال">🔐 اجلب من GitHub</button>
   </div>
   <p class="hint" id="syncMsg"></p>
+  <p class="hint"><b>الرقم السرّي:</b> لا يخرج تعديل إلى الإنترنت ولا يُستبدل هذا الجهاز
+     إلّا بالرقم السرّي ، يُسأل عنه في كلّ مرّة. وهو رقم القفل نفسه (<b>١٩٨٥</b> ابتداءً) ،
+     تغيّره من «تغيير الرقم السرّي» أعلاه.</p>
   <p class="hint"><b>مهمّ:</b> رمز الوصول يبقى على هذا الجهاز ولا يُرفع أبداً ـ يُنزع من البيانات قبل رفعها.
      احصل عليه من GitHub ← Settings ← Developer settings ← Personal access tokens ، بصلاحية
      <code>Contents: Read and write</code> على هذا المستودع وحده.
-     وانتبه: المستودع عامّ ، فما يُرفع يراه الجميع ـ إن أردت الخصوصية فاجعل المزامنة إلى مستودع خاصّ.</p>
+     والمقصد الافتراضي مستودع <b>خاصّ</b> ـ إن غيّرته فتأكّد أنّ ما تضعه خاصّ لا عامّ.</p>
 </section>
 
 <!-- ══════════ شريط التنقّل السفلي (الهاتف) ══════════ -->

@@ -32,7 +32,7 @@
     'studio/studio-shell', 'studio/studio-gallery', 'studio/studio-pdf', 'studio/studio-render',
     'studio/studio-capture', 'studio/studio-wire', 'studio/studio-manage',
     'views/views', 'views/library', 'views/settings',
-    'app/lock', 'app/sync', 'app/morepanel',
+    'app/lock', 'app/github', 'app/sync', 'app/morepanel',
     'app/wire-editor', 'app/wire-settings', 'app/boot'
   ];
 
