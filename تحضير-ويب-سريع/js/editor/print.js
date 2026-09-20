@@ -2,6 +2,15 @@
    تُطبع ورقة الشاشة نفسها ، ويفرض css/print.css مقاس A4 الحقيقي مهما كان
    وضع العرض ، فتخرج الطباعة مطابقة في الهاتف والحاسوب معاً. */
 
+/** ينتظر فكّ ترميز الصور بمهلة قصوى.
+    decode() لا يستقرّ أبداً ما دامت الصفحة مخفيّة (تبويب في الخلفية أو نافذة
+    محجوبة) ، فلو انتظرناه بلا حدّ لما وصلنا إلى window.print أصلاً ولبدا
+    زرّ الطباعة معطّلاً. الصور محمّلة أصلاً ، وفكّ الترميز تحسين لا شرط. */
+function decodeAll(imgs, ms = 1200) {
+  const all = Promise.all(imgs.map(im => im.decode ? im.decode().catch(() => {}) : 0));
+  return Promise.race([all, new Promise(r => setTimeout(r, ms))]);
+}
+
 /** يهيّئ الورقة للطباعة : هندسة A4 حقيقية ، بلا تحديد ولا تصغير ، والصور محمّلة.
     فرض A4 هنا ضروريّ : في «وضع الشاشة» تتمدّد الصناديق بارتفاع محتواها ، فلو
     قِسنا الامتلاء عليها لظننّا كلّ شيء متّسعاً ثم خرجت الطباعة مقصوصة. */
@@ -9,12 +18,26 @@ async function preparePrint(paper) {
   figSel = null;
   inlDeselect();
   paper.classList.remove('zoomed');
+  forceA4();
+  await new Promise(r => setTimeout(r, 250));
+  await decodeAll($$('img', paper));
+  // الضبط قبل الطباعة مباشرة : لا تخرج صورة مقصوصة لأنّ صندوقها امتلأ
+  return fitAllBoxes(false);
+}
+
+/** يستأذن المعلّم إن بقي صندوق ممتلئاً بعد التصغير ، فلا يُقصّ شيء وهو لا يدري */
+function confirmIfClipped(stuck) {
+  if (!stuck) return true;
+  return confirm(
+    `تنبيه: ${ar(stuck)} ${stuck === 1 ? 'صندوق ممتلئ' : 'صناديق ممتلئة'} حتى بعد تصغير الصور ،\n` +
+    'وما يتجاوز حدّ الصفحة لن يظهر في الورقة المطبوعة.\n\n' +
+    'موافق : اطبع كما هو.\nإلغاء : أعود لأحذف عنصراً أو أنقله إلى «تابع العرض».');
+}
+
+/** يفرض هندسة A4 على الشاشة قبل الطباعة ، فتتطابق المعاينة والمخرج */
+function forceA4() {
   document.body.classList.remove('screenmode');
   document.body.classList.add('a4mode');
-  await new Promise(r => setTimeout(r, 250));
-  await Promise.all($$('img', paper).map(im => im.decode ? im.decode().catch(() => {}) : 0));
-  // الضبط قبل الطباعة مباشرة : لا تخرج صورة مقصوصة لأنّ صندوقها امتلأ
-  fitAllBoxes(false);
 }
 
 /** يعيد الورقة إلى وضع العرض بعد انتهاء الطباعة */
@@ -30,13 +53,15 @@ async function printCurrent(mode) {
   if (mode === 'worksheet') {
     paper.innerHTML = worksheetHTML(s);
     paper.classList.remove('zoomed');
+    forceA4();
     await new Promise(r => setTimeout(r, 150));
     window.print();
     return afterPrint(true);
   }
 
   renderEditor();
-  await preparePrint(paper);
+  const { stuck } = await preparePrint(paper);
+  if (!confirmIfClipped(stuck)) return afterPrint(false);
   window.print();
   afterPrint(false);
 }
@@ -60,7 +85,8 @@ async function printWeekSessions() {
   const paper = byId('paper');
   paper.innerHTML = weekSessions.map(sheetHTML).join('');
   await hydrateAssets(paper);
-  await preparePrint(paper);
+  const { stuck } = await preparePrint(paper);
+  if (!confirmIfClipped(stuck)) return setTimeout(() => { curIdx = oldCur; renderEditor(); }, 100);
   window.print();
   setTimeout(() => { curIdx = oldCur; renderEditor(); }, 400);
 }
@@ -74,6 +100,7 @@ async function printBlank() {
   const paper = byId('paper');
   paper.innerHTML = blankSheetHTML().repeat(n);
   paper.classList.remove('zoomed');
+  forceA4();
   await new Promise(r => setTimeout(r, 200));
   window.print();
   afterPrint(true);

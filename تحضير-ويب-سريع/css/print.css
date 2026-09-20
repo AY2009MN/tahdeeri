@@ -26,7 +26,11 @@
   .sheet::before{display:none!important}
   .sheet>.sect.grow{flex:1 1 0!important;min-height:0!important}
   .sectwrap,.sectbox{overflow:hidden!important}
-  .sectwrap.lines,.sectbox.lines{max-height:calc(4 * 1.6em + 6mm)!important}
+  /* سقف الأسطر يمنع الصناديق النصّية من التمدّد ، لكنّه لا يُطبَّق على صندوق
+     فيه صورة ـ وإلّا قُصّت الصورة في الطباعة وهي ظاهرة على الشاشة. هو الاستثناء
+     نفسه المعمول به في paper.css ، ولولا تكراره هنا لألغاه ‎!important‎. */
+  .sectwrap.lines:not(:has(.inl)):not(:has(.figs)),
+  .sectbox.lines:not(:has(.inl)){max-height:calc(4 * 1.6em + 6mm)!important}
   .sheet:last-child,.wsheet:last-child{page-break-after:auto;break-after:auto}
 
   /* وضوح الحبر */
