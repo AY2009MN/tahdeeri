@@ -13,6 +13,7 @@ const KEYS = {
   halat: 'حالات', turuq: 'طرق', taamim: 'تعميم', ruju: 'مراجعة', jadwal: 'جدول',
   khat: 'خطّ الأعداد', mukhatat: 'مخطّط', khutuwat: 'خطوات', rule: 'قاعدة',
   tawdih: 'توضيح', anwa: 'أنواع', absat: 'أبسط صورة', tawzi: 'توزيع',
+  p: 'صفحة',            // لقطة صفحة من الكتاب ـ مولَّدة آلياً
   farq: 'الفرق', tasawi: 'التساوي', ittihad: 'الاتحاد', taqatu: 'التقاطع'
 };
 
