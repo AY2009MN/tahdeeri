@@ -86,14 +86,28 @@ function gotoSession(delta) {
   byId('paper')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
-/* ═══ إدراج صورة من جهاز المعلّم ═══ */
+/* ═══ إدراج صورة من جهاز المعلّم ═══
+   كلّ صورة تدخل مجرى النصّ (inline) ، فنظام واحد للصور لا نظامان.
+   وإن لم يكن المؤشّر في صندوق ، فصندوق «العرض» هو المقصد المعقول. */
 async function insertImage(file) {
-  const s = curSession();
   const dataUrl = await shrinkImage(file, 1200, 0.8);
-  if (inlTarget()) { await insertInline(dataUrl); return; }
-  const p = prepFor(s);
-  p.figs = (p.figs !== undefined ? p.figs : (s.figs || []))
-    .concat([{ ...FIG_DEFAULTS, src: dataUrl, cap: '' }]);
-  markDirty(s);
+  if (!inlTarget() && !inlSetTarget('show')) return alert('افتح ورقة التحضير أوّلاً.');
+  await insertInline(dataUrl);
+}
+
+/** يُرجع الحصة إلى نصّها الأصلي في المنهج ـ مخرج المعلّم إن أفسد ورقة ،
+    إذ لا تراجع بعد إغلاق الصفحة. يمسّ هذه الحصة وحدها. */
+async function resetSession() {
+  const s = curSession();
+  if (!s) return;
+  const what = `${s.code} ${s.title} ـ الحصة ${ar(s.partIdx)}`;
+  if (!confirm(`استعادة «${what}» إلى نصّها الأصلي في المنهج؟\n\n` +
+               'يُحذف ما كتبتَه وما أدرجتَه من صور في هذه الحصة وحدها.')) return;
+  delete prepCache[s.id];
+  await DB.del('preps', s.id);
+  s.status = 'planned';
+  await DB.put('sessions', { id: s.id, date: s.date, period: s.period, status: 'planned' });
   renderEditor();
+  refreshStats();
+  toast('استُعيد نصّ الدرس الأصلي ✓');
 }

@@ -76,7 +76,5 @@ function debounce(fn, ms) {
   return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 }
 
-/** أصغر شاشة يُعرض فيها التطبيق بهيئة الهاتف */
-const isPhone = () => window.matchMedia('(max-width:640px)').matches;
 /* الحدّ نفسه المستعمل في css/responsive.css لإرساء الاستوديو بجانب الورقة */
 const isWide = () => window.matchMedia('(min-width:1000px)').matches;

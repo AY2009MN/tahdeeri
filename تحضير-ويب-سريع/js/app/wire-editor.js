@@ -11,6 +11,7 @@ function wireEditorBar() {
   bind('btnFit', 'onclick', fitToPages);
   bind('btnPrint', 'onclick', () => printCurrent('sheet'));
   bind('btnBlank', 'onclick', printBlank);
+  bind('btnReset', 'onclick', resetSession);
   bind('btnWorksheet', 'onclick', () => printCurrent('worksheet'));
   bind('btnPrintWeek', 'onclick', printWeekSessions);
   bind('btnStudio', 'onclick', () => openStudio('gallery'));
