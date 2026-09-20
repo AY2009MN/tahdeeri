@@ -387,7 +387,18 @@ function firstOf(pred) {
 
 /** حصة اليوم إن وُجدت ، وإلا أقرب حصة قادمة ، وإلا آخر حصة مضت */
 function todayIdx(gid) {
-  const list = sessionsIdx[gid] || []; const t = iso(new Date());
+  const c = (S?.classes || []).find(x => x.id === S?.cls && x.g === gid)
+         || (S?.classes || []).find(x => x.g === gid);
+  const dates = c ? (classDates[c.id] || []) : [];
+  const t = iso(new Date());
+  if (dates.length) {
+    const same = dates.findIndex(d => d && d.date === t);
+    if (same >= 0) return same;
+    const next = dates.findIndex(d => d && d.date > t);
+    if (next >= 0) return next;
+    return dates.length - 1;
+  }
+  const list = sessionsIdx[gid] || [];
   const same = list.findIndex(s => s.date === t);
   if (same >= 0) return same;
   const next = list.findIndex(s => s.date && s.date > t);
@@ -396,10 +407,16 @@ function todayIdx(gid) {
   return 0;
 }
 
-/** يفتح تحضير اليوم ـ يبحث في شعب المعلّم كلّها عن حصة تاريخها اليوم */
-function openToday() {
+/** يفتح تحضير اليوم ـ يبحث في شعب المعلّم كلّها عن حصة تاريخها اليوم مع تفضيل الشعبة الحالية */
+function openToday(preferCurrent = true) {
   const t = iso(new Date());
+  const cc = curClass();
+  if (preferCurrent && cc) {
+    const i = (classDates[cc.id] || []).findIndex(d => d && d.date === t);
+    if (i >= 0) { openEditor(cc.g, i, cc.id); return true; }
+  }
   for (const c of (S.classes || [])) {
+    if (preferCurrent && cc && c.id === cc.id) continue;
     const i = (classDates[c.id] || []).findIndex(d => d && d.date === t);
     if (i >= 0) { openEditor(c.g, i, c.id); return true; }
   }
@@ -407,9 +424,12 @@ function openToday() {
 }
 
 function renderEditor() {
-  const list = sessionsIdx[grade];
+  const list = sessionsIdx[grade] || [];
   curIdx = Math.max(0, Math.min(curIdx, list.length - 1));
   const s = list[curIdx];
+  const pBtn = document.getElementById('prevSes'), nBtn = document.getElementById('nextSes');
+  if (pBtn) pBtn.disabled = curIdx <= 0;
+  if (nBtn) nBtn.disabled = curIdx >= list.length - 1;
   document.getElementById('sesLabel').textContent =
     `${s.code} ${s.title} — الحصة ${ar(s.partIdx)} من ${ar(s.partOf)} · ${fmtDate(s.date)}`;
   const paper = document.getElementById('paper');
@@ -556,124 +576,8 @@ function flowShow(s) {
   b2.innerHTML = renderRich(lines.slice(fit.length).join('\n'));
 }
 
-/* ────────── نسخة الطباعة المرقّمة ──────────
-   على الشاشة تتمدّد الورقة بلا قصّ لتبقى قابلة للتحرير. للطباعة تُبنى نسخة A4 في #printArea:
-   تُصبّ عناصر «العرض» ثم «تابع العرض» بالترتيب في صناديق ثابتة الارتفاع ، وتُضاف صفحات
-   «تابع العرض» عند الحاجة قبل صفحة الخاتمة والتقويم ـ فلا يُقصّ مثال ولا تصغر الصور حتى تتعذّر قراءتها. */
-let printPages = 0;
-
-async function buildPrint() {
-  const host = document.getElementById('printArea');
-  const src = [...document.querySelectorAll('#paper .sheet')];
-  host.innerHTML = '';
-  document.body.classList.remove('pbuilt');
-  if (src.length < 2) return 0;
-  const [p1, p2] = src.slice(0, 2).map(s => {
-    const c = s.cloneNode(true);
-    c.classList.add('psheet');
-    c.querySelectorAll('.inlbar,.inlh,.fighandle,.figbar,.fh,.figcolors').forEach(x => x.remove());
-    c.querySelectorAll('[contenteditable]').forEach(x => x.removeAttribute('contenteditable'));
-    c.querySelectorAll('.sel,.overflowwarn').forEach(x => x.classList.remove('sel', 'overflowwarn'));
-    return c;
-  });
-  host.append(p1, p2);
-  await Promise.all([...host.querySelectorAll('img')].map(im => im.decode ? im.decode().catch(() => {}) : 0));
-
-  /* ورقة التحضير صفحتان دائماً:
-     يُصبّ «العرض» ثم «تابع العرض» بالترتيب ، وتُصغَّر كل الصور بنسبة واحدة (أكبر نسبة ممكنة).
-     إن كان المحتوى كثيراً يُوزَّع على عمودين في كل صفحة ، فتبقى الصور أكبر وأوضح. */
-  const b1 = p1.querySelector('.sectbox[data-f="show"]'), b2 = p2.querySelector('.sectbox[data-f="show2"]');
-  let best = { k: 1, cols: false, fs: S.fontSize || 14 }, fits = true;
-  if (b1 && b2) {
-    const nodes = [...b1.children, ...b2.children];
-    const inls = nodes.flatMap(n => [...(n.matches('.inl') ? [n] : []), ...n.querySelectorAll('.inl')]);
-    const introInls = [...p1.querySelectorAll('.sectbox[data-f="intro"] .inl')];   // صور المقدمة تُصغَّر معها
-    const stream = [];
-    for (let i = 0, unit = []; i < nodes.length; i++) {
-      unit.push(nodes[i]);
-      if (!(nodes[i].matches('.mini, .alert, .gap, .inllbl') && i < nodes.length - 1)) { stream.push(unit); unit = []; }
-    }
-    const wrapOver = box => { const w = box.closest('.sectwrap') || box; return w.scrollHeight > w.clientHeight + 1; };
-    const containers = cols => [b1, b2].flatMap(box => {
-      box.replaceChildren();
-      box.classList.toggle('pcols', cols);
-      if (!cols) return [box];
-      const a = document.createElement('div'), b = document.createElement('div');
-      a.className = b.className = 'pcol';
-      box.append(a, b);
-      return [a, b];
-    });
-    // k = عرض الصورة نسبةً إلى عرضها المختار على كامل الصفحة (في العمودين: نصف الصفحة حدٌّ أعلى)
-    let lastList = [];
-    const layout = (kk, cols) => {
-      inls.forEach(sp => { sp.style.width = Math.min(100, (+sp.dataset.w || 90) * kk * (cols ? 2 : 1)).toFixed(1) + '%'; });
-      introInls.forEach(sp => { sp.style.width = ((+sp.dataset.w || 90) * kk).toFixed(1) + '%'; });
-      const list = lastList = containers(cols);
-      const over = c => cols ? c.scrollHeight > c.clientHeight + 1 : wrapOver(c);
-      let ci = 0;
-      for (const u of stream) {
-        u.forEach(n => list[ci].appendChild(n));
-        while (over(list[ci])) {
-          if (list[ci].children.length === u.length || ci === list.length - 1) return false;
-          u.forEach(n => list[ci].removeChild(n));
-          ci++;
-          u.forEach(n => list[ci].appendChild(n));
-        }
-      }
-      return !list.some(over);
-    };
-    const search = cols => {
-      const hi = cols ? 0.5 : 1;
-      if (layout(hi, cols)) return hi;
-      let lo = 0.15;
-      if (!layout(lo, cols)) return 0;
-      let top = hi;
-      for (let i = 0; i < 9; i++) { const mid = (lo + top) / 2; if (layout(mid, cols)) lo = mid; else top = mid; }
-      return lo;
-    };
-    const tryFont = fs => {
-      host.style.setProperty('--sheetfs', fs + 'px');
-      const single = search(false);
-      const two = single >= 0.55 ? 0 : search(true);
-      return two > single + 0.03 ? { k: two, cols: true, fs } : { k: single, cols: false, fs };
-    };
-    const fs0 = S.fontSize || 14;
-    best = tryFont(fs0);
-    if (best.k < 0.45 && fs0 > 12) { const alt = tryFont(12); if (alt.k > best.k + 0.04) best = alt; }
-    host.style.setProperty('--sheetfs', best.fs + 'px');
-    fits = best.k > 0;
-    layout(fits ? best.k : 0.15, best.cols);
-    /* ملء الفراغ: كل عمود أو صفحة تُكبَّر صورها بنسبة واحدة ما دامت تتّسع ،
-       دون تجاوز العرض الذي اختاره المعلّم للصورة (أو عرض العمود) */
-    if (fits) for (const c of lastList) {
-      const its = [...c.querySelectorAll(".inl")];
-      if (!its.length) continue;
-      const base = its.map(sp => parseFloat(sp.style.width));
-      const cap = Math.min(...its.map((sp, i) => (best.cols ? 100 : (+sp.dataset.w || 90)) / base[i]));
-      const overC = () => best.cols ? c.scrollHeight > c.clientHeight + 1 : wrapOver(c);
-      const apply = f => its.forEach((sp, i) => { sp.style.width = (base[i] * f).toFixed(1) + "%"; });
-      if (cap <= 1.01) continue;
-      let lo = 1, hi = cap;
-      apply(hi); if (!overC()) continue;
-      for (let i = 0; i < 8; i++) { const mid = (lo + hi) / 2; apply(mid); if (overC()) hi = mid; else lo = mid; }
-      apply(lo);
-    }
-  } else host.style.setProperty('--sheetfs', (S.fontSize || 14) + 'px');
-  document.body.classList.add('pbuilt');
-  printPages = 2;
-  const info = document.getElementById('pagesInfo');
-  if (info) {
-    const pct = Math.round(best.k * 100);
-    info.textContent = !fits ? 'تنبيه: المحتوى أكبر من صفحتين ـ احذف أو صغّر بعض الصور'
-      : `الطباعة: صفحتان${best.cols ? ' بعمودين' : ''}${best.k < 1 ? ` · الصور ${ar(pct)}٪` : ''}`;
-    info.classList.toggle('dirty', !fits || best.k < 0.35);
-  }
-  window.__printInfo = { k: best.k, cols: best.cols, fs: best.fs };
-  return fits ? best.k : -1;
-}
 let printTimer = 0;
-const schedulePrint = () => { clearTimeout(printTimer); printTimer = setTimeout(buildPrint, 700); };
-window.fitSheets = () => checkOverflow();   // ترتيب الطباعة يُبنى عند الضغط على «معاينة وطباعة» فقط               // يُستدعى بعد إدراج صورة أو تغيير حجمها
+window.fitSheets = () => checkOverflow();
 
 /** على الشاشات الأضيق من A4 تُصغَّر الورقة كلها بصرياً وتبقى هندستها A4 كما تُطبع */
 function zoomPaper() {
@@ -784,8 +688,9 @@ function refreshStats() {
 function renderNotebook() {
   const q = (document.getElementById('nbSearch').value || '').trim();
   const f = document.getElementById('nbFilter').value;
-  const list = sessionsIdx[grade];
+  const list = sessionsIdx[grade] || [];
   const byUnit = {};
+  const todayISO = iso(new Date());
   list.forEach(s => {
     if (q && !(s.title + s.code + s.focus).includes(q)) return;
     if (f === 'done' && !isDone(s)) return;
@@ -794,10 +699,13 @@ function renderNotebook() {
   });
   document.getElementById('nbList').innerHTML = Object.entries(byUnit).map(([no, u]) => `
     <div class="nbunit"><h4>الوحدة ${esc(no)} ـ ${esc(u.title)}</h4>
-      ${u.rows.map(s => `<div class="nbrow ${isDone(s)?'done':''}" data-g="${s.gradeId}" data-i="${s.n}">
+      ${u.rows.map(s => {
+        const isToday = s.date === todayISO;
+        return `<div class="nbrow ${isDone(s)?'done':''} ${isToday ? 'today' : ''}" data-g="${s.gradeId}" data-i="${s.n}">
         <span class="n">${ar(s.n+1)}</span>
-        <span class="t">${esc(s.code)} ${esc(s.title)} <small style="color:#5a6472">(${ar(s.partIdx)}/${ar(s.partOf)})</small></span>
-        <span class="dt">${fmtDate(s.date)}</span></div>`).join('')}
+        <span class="t">${esc(s.code)} ${esc(s.title)} <small style="color:#5a6472">(${ar(s.partIdx)}/${ar(s.partOf)})</small>${isToday ? ' <span class="tag-today">اليوم</span>' : ''}</span>
+        <span class="dt">${fmtDate(s.date)}</span></div>`;
+      }).join('')}
     </div>`).join('') || '<p class="hint">لا نتائج.</p>';
 }
 
@@ -874,6 +782,51 @@ async function printCurrent(mode) {
   setTimeout(zoomPaper, 400);
 }
 
+/** طباعة تحضيرات الأسبوع الحالي للشعبة المختارة */
+async function printWeekSessions() {
+  const today = new Date();
+  const start = new Date(today); start.setDate(start.getDate() - today.getDay());
+  const week = [];
+  for (let i = 0; i < 7; i++) { const d = new Date(start); d.setDate(d.getDate() + i); week.push(iso(d)); }
+
+  const c = curClass(); if (!c) return;
+  const dates = classDates[c.id] || [];
+  const list = sessionsIdx[c.g] || [];
+  const weekSessions = [];
+  dates.forEach((d, idx) => {
+    if (d && week.includes(d.date) && list[idx]) {
+      weekSessions.push(list[idx]);
+    }
+  });
+
+  if (!weekSessions.length) {
+    return alert(`لا توجد حصص مجدولة هذا الأسبوع لشعبة ${c.name} (${CURRICULA[c.g].name}).`);
+  }
+
+  if (!confirm(`طباعة تحضيرات هذا الأسبوع كاملة (${ar(weekSessions.length)} حصص لشعبة ${c.name})؟`)) return;
+
+  clearTimeout(printTimer);
+  document.body.classList.remove('pbuilt');
+  document.getElementById('printArea').innerHTML = '';
+  const paper = document.getElementById('paper');
+  paper.style.zoom = 1;
+  figSel = null;
+  const oldCur = curIdx;
+  show('editor');
+
+  paper.innerHTML = weekSessions.map(s => sheetHTML(s)).join('');
+  await hydrateAssets(paper);
+  await new Promise(r => setTimeout(r, 250));
+  await Promise.all([...paper.querySelectorAll('img')]
+    .map(im => im.decode ? im.decode().catch(() => {}) : 0));
+  window.print();
+  setTimeout(() => {
+    curIdx = oldCur;
+    renderEditor();
+    zoomPaper();
+  }, 400);
+}
+
 /* ────────── الإقلاع ────────── */
 function banner(html, kind) {
   const d = document.createElement('div');
@@ -923,16 +876,21 @@ async function start() {
     await DB.put('settings', S);
   }
   computeDates(); applyClass();
+  curIdx = todayIdx(grade);
 
   const gs = document.getElementById('gradeSel');
   fillClassSel();
 
   /* الأحداث */
-  document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(t.dataset.view));
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+    if (t.dataset.view === 'editor' && document.getElementById('view-editor').classList.contains('hidden')) {
+      curIdx = todayIdx(grade);
+    }
+    show(t.dataset.view);
+  });
   gs.onchange = () => {
-    const prev = grade;
     S.cls = gs.value; applyClass();
-    if (grade !== prev) curIdx = 0;
+    curIdx = todayIdx(grade);
     DB.put('settings', S);
     show(document.querySelector('.view:not(.hidden)').id.replace('view-', ''));
   };
@@ -954,6 +912,7 @@ async function start() {
   document.getElementById('btnPrint').onclick = () => printCurrent('sheet');
   document.getElementById('btnBlank').onclick = () => printBlank();
   document.getElementById('btnWorksheet').onclick = () => printCurrent('worksheet');
+  const bpw = document.getElementById('btnPrintWeek'); if (bpw) bpw.onclick = () => printWeekSessions();
   document.getElementById('bookList').addEventListener('change', async e => {
     const r = e.target.closest('[data-role]'); if (!r) return;
     const rec = await DB.get('books', r.dataset.role);

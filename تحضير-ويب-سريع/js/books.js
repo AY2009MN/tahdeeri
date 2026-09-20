@@ -64,7 +64,30 @@ function lessonRange(gid, code) {
   const o = S.pageMap && S.pageMap[gid] && S.pageMap[gid][code];
   return o || (window.BOOK_PAGES[gid] || {})[code] || null;
 }
-const printedPage = p => p - 1;           // ترقيم الكتاب المطبوع = صفحة PDF − ١ (للكتابين)
+/** ترقيم الكتاب المطبوع بحسب الصف ورقم صفحة PDF (يأخذ بالاعتبار صفحات الغلاف والمقدمات للجزء الثاني) */
+function printedPage(p, gid = grade) {
+  if (gid === '8') {
+    if (p >= 144) return p - 14;
+    return Math.max(1, p - 1);
+  }
+  if (gid === '9') {
+    if (p >= 135) return p - 15;
+    return Math.max(1, p - 1);
+  }
+  return Math.max(1, p - 1);
+}
+
+function pdfPageFromPrinted(p, gid = grade) {
+  if (gid === '8') {
+    if (p >= 130) return p + 14;
+    return Math.max(1, p + 1);
+  }
+  if (gid === '9') {
+    if (p >= 120) return p + 15;
+    return Math.max(1, p + 1);
+  }
+  return Math.max(1, p + 1);
+}
 
 /* ────────── عارض الدرس ────────── */
 /** يُستدعى من «إدراج من الكتاب» أو من مكان إدراج جاهز داخل الورقة */
@@ -275,7 +298,7 @@ function wireViewer() {
     if (b.id === 'vZin')      { bk.scale = Math.min(3, bk.scale + 0.2); return keepPage(drawLessonPages); }
     if (b.id === 'vZout')     { bk.scale = Math.max(0.7, bk.scale - 0.2); return keepPage(drawLessonPages); }
     if (b.id === 'vAll')      { bk.all = !bk.all; buildViewerHead(); await drawLessonPages(); if (bk.all) gotoPage(bk.from); return; }
-    if (b.id === 'vGo')       return gotoPage(+document.getElementById('vPageNo').value + 1);
+    if (b.id === 'vGo')       return gotoPage(pdfPageFromPrinted(+document.getElementById('vPageNo').value));
     if (b.id === 'vSetFrom' || b.id === 'vSetTo') {
       const p = currentViewerPage();
       S.pageMap ||= {}; S.pageMap[grade] ||= {};
@@ -322,7 +345,7 @@ function wireViewer() {
     if (e.target.id === 'vLesson') { bk.all = false; openLessonViewer(e.target.value); }
   });
   document.getElementById('vPageNo').addEventListener('keydown', e => {
-    if (e.key === 'Enter') gotoPage(+e.target.value + 1);
+    if (e.key === 'Enter') gotoPage(pdfPageFromPrinted(+e.target.value));
   });
 }
 
