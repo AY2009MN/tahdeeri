@@ -76,6 +76,7 @@ let saveTimer = null;
 const DEFAULTS = {
   id: 'app', teacher: '', school: '', year: '٢٠٢٦/٢٠٢٧', term: 'الأول',
   start: '2026-09-14', end: '2026-12-31', fontSize: 14,
+  manualMeta: false,
   sections: { logo:true, osi:true, vocab:true, media:true, evalTable:true, sign:true },
   holidays: [],
   ttVersion: 3,
@@ -223,8 +224,11 @@ function sheetHTML(s) {
   const media = s.media.slice(0, 3);
   while (media.length < 3) media.push('اختيار عنصر.');
 
+  const isManual = !!S?.manualMeta;
   const headRows = [1,2,3].map(i => i === 1
-    ? `<tr><td class="valb">${fmtDate(s.date)}</td><td class="valb">${esc((curClass() || s).name || s.section)}</td><td class="valb">${s.period?ar(s.period):'……'}</td></tr>`
+    ? (isManual
+        ? `<tr><td class="valb">&nbsp;</td><td class="valb">&nbsp;</td><td class="valb">&nbsp;</td></tr>`
+        : `<tr><td class="valb">${fmtDate(s.date)}</td><td class="valb">${esc((curClass() || s).name || s.section)}</td><td class="valb">${s.period?ar(s.period):'……'}</td></tr>`)
     : `<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`).join('');
 
   const evalRows = [1,2,3].map(() =>
@@ -337,12 +341,15 @@ function sheetHTML(s) {
 function worksheetHTML(s) {
   const w = s.worksheet;
   if (!w) return '<p class="hint" style="text-align:center">لا توجد ورقة عمل لهذه الحصة.</p>';
+  const isManual = !!S?.manualMeta;
+  const wsDate = isManual ? '……………………' : fmtDate(s.date);
+  const wsClass = isManual ? esc(s.gradeName) : `${esc(s.gradeName)} ـ ${esc((curClass() || s).name || s.section)}`;
   const cell = `
     <div class="wcell">
       <h5>${esc(w.title)}</h5>
-      <div class="meta"><span>${esc(s.gradeName)} ـ ${esc((curClass() || s).name || s.section)}</span><span>${esc(s.code)} ${esc(s.title)}</span></div>
+      <div class="meta"><span>${wsClass}</span><span>${esc(s.code)} ${esc(s.title)}</span></div>
       <ol><li>${mathWrap(esc(w.q1))}</li><li>${mathWrap(esc(w.q2))}</li></ol>
-      <div class="nameline">الاسم: ………………………………  التاريخ: ${fmtDate(s.date)}</div>
+      <div class="nameline">الاسم: ………………………………  التاريخ: ${wsDate}</div>
     </div>`;
   return `<div class="wsheet">${cell.repeat(4)}</div>`;
 }
@@ -737,6 +744,8 @@ function renderSettings() {
     </div>`;
 
   renderSections();
+  const stMan = document.getElementById('stManualMeta');
+  if (stMan) stMan.checked = !!S.manualMeta;
   document.getElementById('holList').innerHTML = S.holidays.map((h,i) =>
     `<li>${fmtDate(h.date)} ـ ${esc(h.label||'عطلة')} <button data-hol="${i}">×</button></li>`).join('')
     || '<li class="hint">لا عطل مضافة.</li>';
@@ -913,6 +922,23 @@ async function start() {
   document.getElementById('btnBlank').onclick = () => printBlank();
   document.getElementById('btnWorksheet').onclick = () => printCurrent('worksheet');
   const bpw = document.getElementById('btnPrintWeek'); if (bpw) bpw.onclick = () => printWeekSessions();
+  const updateManualMeta = val => {
+    S.manualMeta = !!val;
+    const c1 = document.getElementById('chkManualMeta'); if (c1) c1.checked = S.manualMeta;
+    const c2 = document.getElementById('stManualMeta'); if (c2) c2.checked = S.manualMeta;
+    DB.put('settings', S);
+    if (!document.getElementById('view-editor').classList.contains('hidden')) renderEditor();
+  };
+  const chkMan = document.getElementById('chkManualMeta');
+  if (chkMan) {
+    chkMan.checked = !!S.manualMeta;
+    chkMan.onchange = () => updateManualMeta(chkMan.checked);
+  }
+  const stMan = document.getElementById('stManualMeta');
+  if (stMan) {
+    stMan.checked = !!S.manualMeta;
+    stMan.onchange = () => updateManualMeta(stMan.checked);
+  }
   document.getElementById('bookList').addEventListener('change', async e => {
     const r = e.target.closest('[data-role]'); if (!r) return;
     const rec = await DB.get('books', r.dataset.role);

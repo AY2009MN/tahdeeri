@@ -6,7 +6,7 @@
 <title>دفتر التحضير</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1b4c8c">
-<link rel="stylesheet" href="css/style.css?v=36">
+<link rel="stylesheet" href="css/style.css?v=37">
 </head>
 <body>
 
@@ -77,6 +77,7 @@
     <button class="btn" id="btnWorksheet">ورقة العمل</button>
     <button class="btn" id="btnFit" title="تصغير الصور بالقدر اللازم حتى يتّسع المحتوى للصفحتين">اضبط الصفحتين</button>
     <button class="btn" id="btnLock" title="أدخل الرقم السرّي لفتح التعديل">🔒 مقفل</button>
+    <label class="btn sm" id="lblManualMeta" title="عدم طباعة التاريخ والصف والحصة لتُكتب بخط اليد"><input type="checkbox" id="chkManualMeta"> كتابة يدوية للتاريخ والصف</label>
     <button class="btn" id="btnBlank" title="نموذج تحضير فارغ بلا تاريخ ولا صف ولا حصة ، يُكتب بخطّ اليد">نموذج فارغ</button>
     <button class="btn primary" id="btnPrint">معاينة وطباعة</button>
   </div>
@@ -122,6 +123,9 @@
   <h2>عناصر القالب</h2>
   <p class="hint">أزِل أيّ عنصر لا تحتاجه من ورقة التحضير ـ يختفي من الشاشة والطباعة معاً.</p>
   <div id="sectionsBox" class="toolbar"></div>
+  <div style="margin:8px 12px">
+    <label class="btn"><input type="checkbox" id="stManualMeta"> عدم طباعة التاريخ والصف والحصة (تُترك الخانات فارغة لتُكتب يدوياً بخط اليد)</label>
+  </div>
 
   <h2>توزيع التواريخ</h2>
   <div class="grid2">
@@ -218,14 +222,14 @@
 
 <div id="printArea"></div>
 
-<script src="js/curriculum8.js?v=36"></script>
-<script src="js/curriculum9.js?v=36"></script>
-<script src="js/db.js?v=36"></script>
-<script src="js/figs.js?v=36"></script>
-<script src="js/inline.js?v=36"></script>
-<script src="js/bookmap.js?v=36"></script>
-<script src="js/books.js?v=36"></script>
-<script src="js/sync.js?v=36"></script>
-<script src="js/app.js?v=36"></script>
+<script src="js/curriculum8.js?v=37"></script>
+<script src="js/curriculum9.js?v=37"></script>
+<script src="js/db.js?v=37"></script>
+<script src="js/figs.js?v=37"></script>
+<script src="js/inline.js?v=37"></script>
+<script src="js/bookmap.js?v=37"></script>
+<script src="js/books.js?v=37"></script>
+<script src="js/sync.js?v=37"></script>
+<script src="js/app.js?v=37"></script>
 </body>
 </html>
