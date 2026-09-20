@@ -17,3 +17,7 @@ desktop.ini
 .DS_Store
 تحضير-ويب-سريع/tools/
 تحضير-ويب-سريع/server.js.bak
+
+# حزم أدوات الصيانة (sharp لضغط الصور) ـ ليست من التطبيق
+node_modules/
+package-lock.json
