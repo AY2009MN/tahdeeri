@@ -16,6 +16,17 @@ const GH = {
                  'X-GitHub-Api-Version': '2022-11-28', ...(opts.headers || {}) }
     });
   },
+  /** ملفّ فوق ميجابايت واحد تعيده واجهة «المحتويات» بلا محتوى
+      (encoding: none) ، فيُجلب من مخزن الكائنات الذي يتّسع حتى ١٠٠ ميجابايت.
+      لولا ذلك لتعطّلت المزامنة كلّها بمجرّد تجاوز البيانات ميجابايت واحداً. */
+  async blob(sha) {
+    const c = this.cfg;
+    const r = await this.api(`${c.repo}/git/blobs/${sha}`, c.token,
+      { headers: { Accept: 'application/vnd.github.raw' } });
+    if (!r.ok) throw new Error('تعذّر جلب البيانات الكبيرة: ' + r.status);
+    return r.text();
+  },
+
   /** يقرأ الملف البعيد ـ يعيد {data, sha} أو {data:null} إن لم يكن موجوداً */
   async read() {
     const c = this.cfg;
@@ -23,8 +34,11 @@ const GH = {
     if (r.status === 404) return { data: null, sha: null };
     if (!r.ok) throw new Error('تعذّر القراءة: ' + r.status + ' ' + (await r.text()).slice(0, 120));
     const j = await r.json();
-    const bytes = Uint8Array.from(atob(j.content.replace(/\n/g, '')), ch => ch.charCodeAt(0));
-    return { data: JSON.parse(new TextDecoder().decode(bytes)), sha: j.sha };
+    const text = j.encoding === 'base64'
+      ? new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g, '')), ch => ch.charCodeAt(0)))
+      : await this.blob(j.sha);
+    try { return { data: JSON.parse(text), sha: j.sha }; }
+    catch { throw new Error('ملف البيانات في المستودع غير صالح ـ لعلّه عُدّل أو رُفع بغير هذا التطبيق.'); }
   },
   async write(obj, sha, msg) {
     const c = this.cfg;
@@ -49,15 +63,30 @@ function stripToken(dump) {
 
 const syncMsg = t => setText('syncMsg', t);
 
+const MB = 1048576;
+
+/** اللقطات تُخزَّن داخل البيانات ، فيكبر الملف بسرعة. نُعلم المعلّم بالحجم
+    قبل الرفع ـ فقد يكون على بيانات الهاتف ، وقد يقترب من حدود المستودع. */
+function confirmSize(bytes) {
+  const mb = bytes / MB;
+  if (mb < 5) return true;
+  return confirm(
+    `حجم ما سيُرفع ${ar(mb.toFixed(1))} ميجابايت (أكثره صور الكتاب المدرجة).\n` +
+    (mb > 60 ? 'وهذا قريب من حدّ المستودع ، وقد يفشل الرفع.\n' : '') +
+    'إن كنت على بيانات الهاتف فقد يستهلك ذلك رصيدك.\n\nأتريد المتابعة؟');
+}
+
 async function syncPush() {
   if (!GH.cfg.token) return alert('أدخل رمز الوصول أوّلاً في خانة «رمز الوصول».');
   if (!LOCK.open) return alert('افتح القفل بالرقم السرّي قبل الرفع.');
   try {
-    syncMsg('جارٍ الرفع…');
-    const { sha } = await GH.read();
+    syncMsg('جارٍ التجهيز…');
     const dump = stripToken(await DB.dump(false));      // بلا كتب PDF ـ حجمها كبير
     dump.syncedAt = new Date().toISOString();
     dump.device = navigator.userAgent.slice(0, 60);
+    if (!confirmSize(new Blob([JSON.stringify(dump)]).size)) return syncMsg('');
+    syncMsg('جارٍ الرفع…');
+    const { sha } = await GH.read();
     await GH.write(dump, sha, 'مزامنة دفتر التحضير ' + todayISO());
     S.lastSync = dump.syncedAt;
     await DB.put('settings', S);
