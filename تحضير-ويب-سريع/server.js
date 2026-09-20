@@ -2,7 +2,7 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 
 /* يُبنى index.html من أجزاء html/ عند كلّ تشغيل ، فلا يبقى قديماً أبداً */
-try { require('./tools/build-html.cjs')(); }
+try { require('./build/build-html.cjs')(); }
 catch (e) { console.error('تعذّر بناء index.html:', e.message); }
 const root = __dirname, PORT = +process.env.PORT || 8080;
 // التطبيق صار داخل مجلد فرعي في المستودع ، فمجلد الكتب أعلى بدرجتين (للتطوير المحلي فقط)
