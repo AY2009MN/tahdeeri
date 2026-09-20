@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دفتر التحضير</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b4c8c">
+<meta name="description" content="دفتر تحضير الرياضيات ـ الصفّان الثامن والتاسع">
+<!-- التنسيق كبسولات : الرموز ، الأساس ، الهيكل ، العروض ، الورقة ، المحتوى ،
+     الصور ، الاستوديو ، التجاوب ، الطباعة. تُدرج آلياً من قائمة js/assets.js -->
+<!--#styles-->
+</head>
+<body>
+
+<header class="topbar no-print">
+  <div class="brand">دفتر التحضير</div>
+  <nav class="tabs" aria-label="التنقّل">
+    <button class="tab active" data-view="home"><span class="ic">🏠</span>الرئيسية</button>
+    <button class="tab" data-view="notebook"><span class="ic">📘</span>الدفتر</button>
+    <button class="tab" data-view="editor"><span class="ic">✍</span>التحضير</button>
+    <button class="tab" data-view="library"><span class="ic">📚</span>الكتب</button>
+    <button class="tab" data-view="settings"><span class="ic">⚙</span>الإعدادات</button>
+  </nav>
+  <div class="gradepick"><select id="gradeSel" aria-label="الشعبة"></select></div>
+</header>
+
+<!--#include view-home.html-->
+
+<!--#include view-notebook.html-->
+
+<!--#include view-editor.html-->
+
+<!--#include view-library.html-->
+
+<!--#include view-settings.html-->
+
+<!--#include shell-bottom.html-->
+
+<!--#include studio.html-->
+
+<div id="printArea"></div>
+
+<script src="js/assets.js?v=38"></script>
+<script src="js/loader.js?v=38"></script>
+</body>
+</html>

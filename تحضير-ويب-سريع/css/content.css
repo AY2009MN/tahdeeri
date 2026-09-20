@@ -1,0 +1,48 @@
+/* ═══ تنسيق المحتوى داخل أقسام الورقة + ورقة العمل + النموذج الفارغ ═══ */
+
+.mini{color:var(--blue);font-weight:700;margin:1.5mm 0 .8mm}
+.deftag{background:#fff6a8;padding:0 2px;border-radius:2px}
+.chip{display:inline-block;background:var(--blue);color:#fff;border-radius:var(--r-1);
+  padding:0 6px;font-size:.82em;font-weight:700;margin-inline-start:6px;vertical-align:middle}
+.chip.v2{background:var(--green)}
+.chip.v3{background:#9a4b00}
+.ref{color:var(--red);font-weight:700}
+.alert{color:var(--red);font-weight:700}
+.notebox{border:1px solid #8fb4d9;border-radius:5px;overflow:hidden;margin:1.5mm 0}
+.notebox>b{display:block;background:linear-gradient(90deg,#c2417a,#e0685f);color:#fff;
+  padding:1px var(--sp-2);font-size:.9em}
+.notebox>div{background:#eaf4fd;padding:1.5mm 3mm}
+.notebox ul{margin:0;padding-inline-start:5mm}
+.tm{display:none!important}            /* زمن البند لا يُعرض */
+.sectbox .gap{height:1.2mm}
+
+/* ── ورقة العمل : ٤ نسخ في A4 ── */
+.wsheet{width:var(--paper-w);height:var(--paper-h);background:#fff;box-shadow:var(--sh-2);
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:0}
+.wcell{border:1px dashed #888;padding:7mm 6mm;display:flex;flex-direction:column;font-size:10.5pt}
+.wcell h5{margin:0 0 2mm;font-size:11pt;color:var(--blue);text-align:center}
+.wcell .meta{font-size:8.5pt;color:#444;margin-bottom:2mm;display:flex;justify-content:space-between}
+.wcell ol{margin:0;padding-inline-start:6mm;list-style:arabic-indic}
+.wcell li{margin-bottom:3mm;white-space:pre-wrap}
+.wcell .nameline{margin-top:auto;font-size:9pt;border-top:1px solid #bbb;padding-top:1.5mm}
+
+/* ── النموذج الفارغ للكتابة اليدوية ──
+   أسطر بارتفاع ٨مم يتّسع لها خطّ اليد ، تُرسم بتدرّج متكرّر فتملأ الصندوق ولا تفيض. */
+.rline{height:8mm;border-bottom:1px solid #9aa4b0}
+.rline:last-child{border-bottom:0}
+.rcell{padding:0 2mm}
+.sectwrap.ruled{display:block;padding:2mm 3mm;overflow:hidden;background-origin:content-box;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 calc(8mm - 1px),
+    #8b97a5 calc(8mm - 1px) 8mm)}
+.sectwrap.ruled.grow{flex:1 1 auto}
+.sheet.blank td{height:8mm}
+.sheet.blank .lbl{font-size:.95em}
+
+/* ── شريط تنسيق النصّ ── */
+.fmtbar{display:flex;flex-wrap:wrap;gap:var(--sp-1);align-items:center;
+  margin:0 var(--sp-3) var(--sp-2);padding:5px var(--sp-2);background:#fff;
+  border:1px solid var(--edge);border-radius:var(--r-3)}
+.fmtbar button{min-width:34px;height:32px;border:1px solid #d5dbe5;background:#f7f9fc;
+  border-radius:7px;font:700 15px/1 var(--font);cursor:pointer}
+.fmtbar button:hover{background:#e8eef7}
+.fmtbar i{width:1px;height:22px;background:#d5dbe5;margin:0 var(--sp-1)}

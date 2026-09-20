@@ -1,0 +1,80 @@
+/* ═══ استوديو التحضير ═══
+   لوحة واحدة تجمع كلّ ما يتّصل بصور الكتاب :
+     • معرض الدرس   : صور الدرس المقصوصة مسبقاً ـ نقرة واحدة للإدراج.
+     • صفحات الكتاب : عارض PDF مع القصّ المنتظم أو الحرّ.
+     • صور الورقة   : إدارة ما أُدرج فعلاً (ترتيب ، حجم ، نقل ، حذف).
+   على الشاشات العريضة تُرسى بجانب الورقة ، وعلى الهاتف تملأ الشاشة. */
+
+#studio{position:fixed;inset:0;z-index:100;background:#20262e;color:#dbe6f2;
+  display:flex;flex-direction:column}
+#studio.hidden{display:none}
+
+/* ── الرأس ── */
+.st-head{display:flex;gap:var(--sp-2);align-items:center;padding:7px var(--sp-3);
+  background:var(--blue-d);color:#fff;padding-top:max(7px,env(safe-area-inset-top))}
+.st-title{font-weight:700;font-size:14px;flex:1;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.st-tabs{display:flex;gap:2px;background:#ffffff1a;border-radius:var(--r-2);padding:3px;margin:0 var(--sp-3)}
+.st-tabs button{flex:1;border:0;background:transparent;color:#dbe6f2;border-radius:var(--r-1);
+  padding:7px 6px;font:13px/1.2 var(--font);cursor:pointer;min-height:var(--tap)}
+.st-tabs button.on{background:#fff;color:var(--blue-d);font-weight:700}
+
+/* ── شريط الهدف ── */
+.st-target{padding:6px var(--sp-3);background:#244b72;font-size:12.5px;
+  display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap}
+.st-target b{color:#ffd34d}
+
+/* ── شريط أدوات فرعي ── */
+.st-bar{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;
+  padding:6px var(--sp-3);background:#1d3f61;font-size:var(--fs-sm)}
+.st-bar label{display:flex;align-items:center;gap:5px}
+.st-bar select,.st-bar input{padding:var(--sp-1) 7px;border-radius:var(--r-1);border:0;
+  font-family:inherit;font-size:12.5px;min-height:34px;color:var(--ink)}
+.st-bar .meta{font-size:12.5px;color:#b9cbdd}
+.st-bar .grow{flex:1;min-width:120px}
+
+/* ── جسم اللوحة ── */
+.st-body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
+.st-pane{display:none;padding:var(--sp-3)}
+.st-pane.on{display:block}
+
+/* ── معرض الدرس ── */
+.st-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:var(--sp-2)}
+.st-cell{background:#fff;border-radius:var(--r-2);overflow:hidden;cursor:pointer;
+  border:2px solid transparent;display:flex;flex-direction:column;text-align:center}
+.st-cell:hover,.st-cell:focus-visible{border-color:#ffd34d;outline:none}
+.st-cell img{width:100%;height:96px;object-fit:contain;background:#fff;padding:4px}
+.st-cell span{font-size:11px;color:var(--ink-2);padding:3px 4px;background:#f4f7fb;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-empty{text-align:center;color:#b9cbdd;font-size:var(--fs-sm);padding:var(--sp-5) var(--sp-3);line-height:1.9}
+
+/* ── صفحات الكتاب ── */
+#stPages{display:flex;flex-direction:column;align-items:center;gap:14px}
+.vpagewrap{position:relative;line-height:0;background:#fff;box-shadow:0 3px 16px #0006;flex:0 0 auto;max-width:100%}
+canvas.vpage{background:#fff;display:block;max-width:100%;height:auto}
+#studio.capturing canvas.vpage{cursor:crosshair;touch-action:none}
+.vpno{position:absolute;top:6px;inset-inline-start:6px;background:#16324fcc;color:#fff;
+  font-size:11px;line-height:1.6;padding:0 7px;border-radius:9px;z-index:2;pointer-events:none}
+.vsel{position:absolute;border:2px dashed #ffd34d;background:#ffd34d22;pointer-events:none}
+svg.vlasso{position:absolute;inset:0;pointer-events:none}
+svg.vlasso polygon{fill:#ffd34d33;stroke:#e0a800;stroke-width:2;stroke-dasharray:6 4}
+
+/* ── صور الورقة (الإدارة) ── */
+.st-list{display:flex;flex-direction:column;gap:var(--sp-2)}
+.st-item{display:flex;gap:var(--sp-2);align-items:center;background:#ffffff14;
+  border-radius:var(--r-2);padding:var(--sp-2)}
+.st-item img{width:70px;height:56px;object-fit:contain;background:#fff;border-radius:var(--r-1);flex:0 0 auto}
+.st-item .info{flex:1;min-width:0;font-size:12.5px;line-height:1.7}
+.st-item .info b{display:block;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-item .acts{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+.st-item .acts button{border:0;background:#ffffff1f;color:#fff;border-radius:var(--r-1);
+  min-width:34px;min-height:34px;cursor:pointer;font:14px/1 var(--font)}
+.st-item .acts button:hover{background:#ffffff38}
+
+/* ── شريط اللقطة ── */
+.st-shot{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;
+  padding:10px;background:var(--blue-d);color:#fff;
+  padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.st-shot.hidden{display:none}
+.st-shot img{max-height:90px;max-width:40%;background:#fff;border-radius:var(--r-1);box-shadow:0 1px 6px #0006}
+.st-shot label{display:flex;align-items:center;gap:6px;font-size:var(--fs-sm)}

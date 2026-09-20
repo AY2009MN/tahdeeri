@@ -27,10 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # index.html مولَّد من مجلد html/ ـ يُعاد بناؤه هنا فلا تُنشر نسخة قديمة
+      - name: بناء index.html من الأجزاء
+        run: node 'تحضير-ويب-سريع/tools/build-html.cjs'
+
       - name: ضغط تطبيق الويب
         run: |
           cd 'تحضير-ويب-سريع'
-          zip -r -q '../daftar-tahdeer.zip' . -x 'tools/*' -x '*.pdf' -x '*.daftar'
+          zip -r -q '../daftar-tahdeer.zip' . -x 'tools/*' -x 'html/*' -x '*.pdf' -x '*.daftar'
           cd ..
           echo "SIZE=$(du -h 'daftar-tahdeer.zip' | cut -f1)" >> "$GITHUB_ENV"
 

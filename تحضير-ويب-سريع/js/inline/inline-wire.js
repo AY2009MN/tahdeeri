@@ -1,0 +1,128 @@
+/* ═══ ربط تفاعل الصور داخل النصّ ═══ */
+
+/** النقر : موضع إدراج ، أو زرّ في الشريط ، أو تحديد صورة ، أو إلغاء التحديد */
+function wireInlineClick(paper) {
+  paper.addEventListener('click', async e => {
+    const slot = e.target.closest('.slot');
+    if (slot) {
+      e.preventDefault();
+      INL.slot = slot;
+      INL.box = slot.closest('.sectbox');
+      return openStudio('gallery');
+    }
+    const btn = e.target.closest('[data-ia]');
+    if (btn && INL.sel) {
+      e.preventDefault(); e.stopPropagation();
+      const sp = INL.sel;
+      const [a, v] = btn.dataset.ia.split(':');
+      if (await inlAction(a, v, sp, btn)) return;
+      inlSelect(sp);
+      inlSave(sp);
+      return;
+    }
+    const sp = e.target.closest('.inl');
+    if (sp) { if (INL.sel !== sp) inlSelect(sp); return; }
+    if (!e.target.closest('.inlbar')) inlDeselect();
+  });
+
+  /* السحب الأصلي للمتصفح كان يُسقط نسخة ثانية بحجم كامل داخل النصّ ـ يُمنع */
+  paper.addEventListener('dragstart', e => e.preventDefault());
+  paper.addEventListener('drop', e => {
+    if (e.dataTransfer && [...e.dataTransfer.types].includes('text/html')) e.preventDefault();
+  });
+}
+
+/** المقابض : تحجيم من الأركان ، وتحريك من داخل الصورة في الوضع الحرّ */
+function wireInlineDrag(paper) {
+  let drag = null;
+
+  paper.addEventListener('pointerdown', e => {
+    const h = e.target.closest('.inlh');
+    const sp = e.target.closest('.inl');
+    if (!sp) return;
+    if (h) {
+      e.preventDefault(); e.stopPropagation();
+      const host = sp.closest('.sectbox') || sp.closest('.sectwrap');
+      drag = { mode: 'size', sp, corner: h.dataset.corner || 'bl',
+               x0: e.clientX, w0: +sp.dataset.w || 90, W: (host && host.clientWidth) || 690 };
+      try { paper.setPointerCapture(e.pointerId); } catch {}
+      return;
+    }
+    if (sp.classList.contains('free') && !e.target.closest('.inlbar')) {
+      e.preventDefault(); e.stopPropagation();
+      drag = { mode: 'move', sp, x0: e.clientX, y0: e.clientY,
+               ox: +sp.dataset.x || 0, oy: +sp.dataset.y || 0 };
+      try { paper.setPointerCapture(e.pointerId); } catch {}
+    }
+  });
+
+  paper.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (drag.mode === 'move') {
+      drag.sp.dataset.x = Math.round(drag.ox - (e.clientX - drag.x0));   // الورقة تُقاس من اليمين
+      drag.sp.dataset.y = Math.round(drag.oy + (e.clientY - drag.y0));
+      return inlApplyFree(drag.sp);
+    }
+    // التحجيم : ركن أيسر يكبّر بالسحب يساراً ، وأيمن بالسحب يميناً
+    const raw = e.clientX - drag.x0;
+    const dx = drag.corner.includes('l') ? -raw : raw;
+    const w = Math.max(10, Math.min(100, drag.w0 + dx / drag.W * 100));
+    drag.sp.dataset.w = Math.round(w);
+    drag.sp.style.width = w.toFixed(1) + '%';
+    const lbl = $('.inlbar span', drag.sp);
+    if (lbl) lbl.textContent = ar(Math.round(w)) + '٪';
+  });
+
+  const end = () => { if (drag) { inlSave(drag.sp); drag = null; } };
+  paper.addEventListener('pointerup', end);
+  paper.addEventListener('pointercancel', end);
+}
+
+/** لوحة المفاتيح : حذف الصورة ، وتحريكها بالأسهم في الوضع الحرّ */
+function wireInlineKeys(paper) {
+  document.addEventListener('keydown', e => {
+    if (!INL.sel || !document.contains(INL.sel)) return;
+    const sp = INL.sel;
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return inlRemove(sp); }
+    if (e.key === 'Escape') return inlDeselect();
+    if (!sp.classList.contains('free') || !e.key.startsWith('Arrow')) return;
+    e.preventDefault();
+    const step = e.shiftKey ? 10 : 2;
+    const move = { ArrowLeft: ['x', step], ArrowRight: ['x', -step],
+                   ArrowUp: ['y', -step], ArrowDown: ['y', step] }[e.key];
+    sp.dataset[move[0]] = (+sp.dataset[move[0]] || 0) + move[1];
+    inlApplyFree(sp);
+    inlSave(sp);
+  });
+}
+
+function wireInline() {
+  const paper = byId('paper');
+  if (!paper || paper.dataset.inlwired) return;
+  paper.dataset.inlwired = '1';
+  wireInlineClick(paper);
+  wireInlineDrag(paper);
+  wireInlineKeys(paper);
+}
+
+/* ═══ الكتابة في أيّ مكان داخل الصندوق ═══
+   صندوق النصّ بارتفاع محتواه ، فالنقر تحت آخر سطر كان يقع على إطار القسم
+   فلا يستقبل الكتابة. هنا نحوّل أيّ نقرة داخل القسم إلى مؤشّر في نهايته. */
+function wireBoxClick() {
+  const paper = byId('paper');
+  if (!paper || paper.dataset.boxwired) return;
+  paper.dataset.boxwired = '1';
+  paper.addEventListener('mousedown', e => {
+    if (e.target.closest('.inl, .inlbar, .inlh, .slot, .hctl, [contenteditable]')) return;
+    const wrap = e.target.closest('.sectwrap, .sect');
+    const box = wrap && $('[contenteditable][data-f]', wrap);
+    if (!box) return;
+    e.preventDefault();
+    box.focus();
+    const r = document.createRange();
+    r.selectNodeContents(box); r.collapse(false);       // المؤشّر بعد آخر حرف
+    const sel = document.getSelection();
+    sel.removeAllRanges(); sel.addRange(r);
+    box.scrollIntoView({ block: 'nearest' });
+  });
+}

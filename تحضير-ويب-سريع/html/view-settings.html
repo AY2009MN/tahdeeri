@@ -1,0 +1,71 @@
+<!-- ══════════ الإعدادات ══════════ -->
+<section id="view-settings" class="view hidden no-print">
+  <h2>بيانات الورقة</h2>
+  <div class="grid2">
+    <label>اسم المعلم <input id="stTeacher" placeholder="اختياري"></label>
+    <label>اسم المدرسة <input id="stSchool" placeholder="اختياري"></label>
+    <label>العام الدراسي <input id="stYear" value="٢٠٢٦/٢٠٢٧"></label>
+    <label>الفصل الدراسي <input id="stTerm" value="الأول"></label>
+  </div>
+
+  <h2>وضع عرض الورقة</h2>
+  <p class="hint">«وضع الشاشة» يمدّد الأقسام بعرض الجهاز فتسهل الكتابة على الهاتف ،
+     و«مقاس A4» يعرضها كما تخرج من الطابعة. الطباعة نفسها A4 دائماً في الحالين.</p>
+  <div id="viewModeBox" class="toolbar"></div>
+
+  <h2>عناصر القالب</h2>
+  <p class="hint">أزِل أيّ عنصر لا تحتاجه من ورقة التحضير ـ يختفي من الشاشة والطباعة معاً.</p>
+  <div id="sectionsBox" class="toolbar"></div>
+  <div class="toolbar">
+    <label class="btn"><input type="checkbox" id="stManualMeta"> عدم طباعة التاريخ والصف والحصة (تُترك فارغة لتُكتب بخط اليد)</label>
+  </div>
+
+  <h2>توزيع التواريخ</h2>
+  <div class="grid2">
+    <label>تاريخ أول حصة <input type="date" id="stStart" value="2026-09-14"></label>
+    <label>آخر يوم في الفصل <input type="date" id="stEnd" value="2026-12-31"></label>
+  </div>
+
+  <h3>جدول الحصص الأسبوعي</h3>
+  <p class="hint">حدّد لكل شعبة أيام حصصها ورقم الحصة. أيّ تعديل هنا أو في التاريخ يعيد التوزيع فوراً.</p>
+  <div id="timetable"></div>
+
+  <h3>العطل والإجازات</h3>
+  <div class="toolbar">
+    <input type="date" id="holDate" aria-label="تاريخ العطلة">
+    <input id="holLabel" placeholder="مناسبة العطلة">
+    <button class="btn" id="addHol">إضافة</button>
+  </div>
+  <ul id="holList" class="hol"></ul>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btnGenerate">توليد تواريخ الفصل</button>
+    <button class="btn" id="btnExport" title="التحضيرات واللقطات والإعدادات">تصدير ملف النقل</button>
+    <button class="btn" id="btnExportBooks" title="ملف أكبر يضمّ كتب PDF أيضاً">تصدير مع الكتب</button>
+    <label class="btn">استيراد ملف نقل<input type="file" id="impFile" accept=".daftar,.json,application/json" hidden></label>
+  </div>
+  <p class="hint" id="genMsg"></p>
+
+  <h2>قفل التعديل</h2>
+  <p class="hint" id="lockState"></p>
+  <div class="toolbar"><button class="btn" id="btnLockChange">تغيير الرقم السرّي</button></div>
+  <p class="hint">الرقم الابتدائي <b>١٩٨٥</b>. القفل يمنع التعديل على هذا الجهاز فقط ،
+     ويبقى التصفّح والطباعة متاحين. يُحفظ مبصوماً فلا يظهر الرقم في قاعدة البيانات.</p>
+
+  <h2>المزامنة مع GitHub</h2>
+  <div class="grid2">
+    <label>المستودع <input id="ghRepo" placeholder="AY2009MN/tahdeeri"></label>
+    <label>الفرع <input id="ghBranch" placeholder="main"></label>
+    <label>مسار ملف البيانات <input id="ghPath" placeholder="بيانات/daftar-data.json"></label>
+    <label>رمز الوصول <input id="ghToken" type="password" placeholder="ghp_… يبقى على جهازك"></label>
+  </div>
+  <div class="toolbar">
+    <button class="btn primary" id="btnSyncPush">زامن مع GitHub</button>
+    <button class="btn" id="btnSyncPull">اجلب من GitHub</button>
+  </div>
+  <p class="hint" id="syncMsg"></p>
+  <p class="hint"><b>مهمّ:</b> رمز الوصول يبقى على هذا الجهاز ولا يُرفع أبداً ـ يُنزع من البيانات قبل رفعها.
+     احصل عليه من GitHub ← Settings ← Developer settings ← Personal access tokens ، بصلاحية
+     <code>Contents: Read and write</code> على هذا المستودع وحده.
+     وانتبه: المستودع عامّ ، فما يُرفع يراه الجميع ـ إن أردت الخصوصية فاجعل المزامنة إلى مستودع خاصّ.</p>
+</section>

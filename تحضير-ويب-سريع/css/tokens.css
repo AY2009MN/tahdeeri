@@ -1,0 +1,40 @@
+/* ═══ الرموز التصميمية ═══
+   كل لون ومقاس وظلّ في التطبيق يُشتقّ من هنا ، فلا تتكرّر القيم في بقيّة الملفات.
+   تغيير سطر واحد هنا يغيّر التطبيق كلّه ـ الشاشة والطباعة معاً. */
+:root{
+  /* الهوية */
+  --blue:#1b4c8c;  --blue-d:#16324f;  --blue-l:#eef5fd;
+  --red:#c00000;   --green:#12695e;   --amber:#8a5a00;
+
+  /* الحبر والأسطح */
+  --ink:#111;      --ink-2:#42505f;   --ink-3:#5a6472;
+  --line:#000;     --edge:#c7cedb;    --grayfill:#d9d9d9;
+  --bg:#eef1f5;    --card:#fff;
+
+  /* الخطّ */
+  --font:"Cairo","Segoe UI","Tahoma",sans-serif;
+  --fs:15px;       --fs-sm:13px;      --fs-xs:12px;
+
+  /* المسافات */
+  --sp-1:4px;  --sp-2:8px;  --sp-3:12px;  --sp-4:16px;  --sp-5:24px;
+
+  /* الحواف والظلال */
+  --r-1:6px;   --r-2:8px;   --r-3:10px;   --r-4:14px;   --r-pill:22px;
+  --sh-1:0 1px 4px #0001;   --sh-2:0 2px 12px #0002;   --sh-3:0 4px 18px #0004;
+
+  /* مقاسات الواجهة ـ تتغيّر في responsive.css */
+  --topbar-h:52px;     /* ارتفاع الشريط العلوي */
+  --navbar-h:0px;      /* شريط التنقّل السفلي على الهاتف */
+  --tap:38px;          /* أصغر مساحة لمس */
+  --paper-w:210mm;     /* عرض ورقة A4 */
+  --paper-h:297mm;
+  --paper-pad:10mm 11mm;
+}
+
+/* أجهزة اللمس : كلّ هدف قابل للنقر لا يقلّ عن ٤٤ بكسل */
+@media (pointer:coarse){ :root{ --tap:44px } }
+
+/* تفضيل تقليل الحركة */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}

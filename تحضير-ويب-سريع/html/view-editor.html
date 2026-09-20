@@ -1,0 +1,56 @@
+<!-- ══════════ محرّر التحضير ══════════ -->
+<section id="view-editor" class="view hidden">
+  <div class="toolbar stickybar no-print" id="editorBar">
+    <span class="tb-nav">
+      <button class="btn" id="prevSes" title="الحصة السابقة" aria-label="الحصة السابقة">‹</button>
+      <span id="sesLabel" class="ses-label"></span>
+      <button class="btn" id="nextSes" title="الحصة التالية" aria-label="الحصة التالية">›</button>
+    </span>
+    <button class="btn primary" id="btnStudio" title="صور الكتاب : معرض الدرس وصفحات PDF">📷 استوديو الكتاب</button>
+    <button class="btn" id="btnMore">⋯ المزيد</button>
+
+    <span class="pick foldable" data-more="اختيار الوحدة والدرس والحصة">
+      <select id="unitSel" title="اختر الوحدة" aria-label="الوحدة"></select>
+      <select id="lessonSel" title="اختر الدرس" aria-label="الدرس"></select>
+      <select id="partSel" title="اختر الحصة" aria-label="الحصة"></select>
+    </span>
+    <button class="btn foldable" id="btnToday" data-more="📅 تحضير اليوم">📅 اليوم</button>
+    <button class="btn foldable" id="btnViewMode" data-more="تبديل وضع العرض">📄 مقاس A4</button>
+    <label class="fs foldable" data-more="مقاس خطّ الورقة">مقاس الخط
+      <select id="fsSel" aria-label="مقاس الخط"><option>12</option><option selected>14</option><option>16</option><option>18</option></select>
+    </label>
+    <label class="btn foldable" data-more="إدراج صورة من الجهاز">إدراج صورة<input type="file" id="imgFile" accept="image/*" hidden></label>
+    <button class="btn foldable" id="btnWorksheet" data-more="طباعة ورقة العمل">ورقة العمل</button>
+    <button class="btn foldable" id="btnFit" data-more="اضبط الصفحتين" title="تصغير الصور بالقدر اللازم حتى يتّسع المحتوى للصفحتين">اضبط الصفحتين</button>
+    <button class="btn foldable" id="btnLock" data-more="🔒 قفل التعديل" title="أدخل الرقم السرّي لفتح التعديل">🔒 مقفل</button>
+    <label class="btn sm foldable" data-more="كتابة يدوية للتاريخ والصف" title="عدم طباعة التاريخ والصف والحصة لتُكتب بخط اليد"><input type="checkbox" id="chkManualMeta"> كتابة يدوية للتاريخ</label>
+    <button class="btn foldable" id="btnBlank" data-more="طباعة نموذج فارغ" title="نموذج تحضير فارغ يُكتب بخطّ اليد">نموذج فارغ</button>
+
+    <button class="btn primary" id="btnPrint">🖨 طباعة</button>
+    <span class="spacer"></span>
+    <span class="tb-status">
+      <span id="saveState" class="savestate">محفوظ</span>
+      <span id="pagesInfo" class="pagesinfo"></span>
+    </span>
+  </div>
+
+  <div class="fmtbar no-print" id="fmtBar" aria-label="تنسيق النصّ">
+    <button data-cmd="bold" title="عريض"><b>B</b></button>
+    <button data-cmd="underline" title="تسطير"><u>U</u></button>
+    <i></i>
+    <button data-cmd="foreColor:#c00000" title="أحمر" style="color:#c00000">أ</button>
+    <button data-cmd="foreColor:#1b4c8c" title="أزرق" style="color:#1b4c8c">أ</button>
+    <button data-cmd="foreColor:#111111" title="أسود">أ</button>
+    <button data-cmd="hilite:#fff3a0" title="تظليل أصفر" style="background:#fff3a0">▮</button>
+    <i></i>
+    <button data-cmd="bullet" title="نقطة">•</button>
+    <button data-cmd="justifyRight" title="محاذاة يمين">⇥</button>
+    <button data-cmd="justifyCenter" title="توسيط">≡</button>
+    <i></i>
+    <button data-cmd="removeFormat" title="إزالة التنسيق">⌫</button>
+    <button data-cmd="undo" title="تراجع">↶</button>
+    <button data-cmd="redo" title="إعادة">↷</button>
+  </div>
+
+  <div id="paper"></div>
+</section>

@@ -1,0 +1,99 @@
+/* ═══ الصور داخل الورقة : الصفوف ، التحديد ، الشريط ، المقابض ، الاقتصاص ═══ */
+
+/* ── صور الأقسام (figs) ── */
+.figs{display:flex;flex-direction:column;gap:2mm;margin:2mm 0;align-items:center;width:100%}
+.figs img{max-width:100%;border:1px solid #ccc;border-radius:3px}
+.figcap{font-size:.82em;color:#555;text-align:center}
+.sectwrap .figs{flex:1 1 auto;min-height:0;overflow:visible;margin-top:2mm}
+figure.fig{margin:0;position:relative;display:flex;flex-direction:column;
+  align-items:center;max-width:100%;flex:1 1 auto;min-height:0}
+figure.fig img{display:block;width:auto;max-width:100%;height:auto;flex:1 1 auto;
+  min-height:0;object-fit:contain;object-position:center}
+figure.fig figcaption{flex:0 0 auto}
+figure.fig.free{position:absolute;flex:0 0 auto}
+figure.fig.free img{flex:0 0 auto;width:100%;max-height:none}
+figure.fig.fixed img{object-fit:fill;height:100%}
+figure.fig.sel{outline:1.5px solid var(--blue);outline-offset:1px}
+.fighandle{position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;
+  border:1px solid #9ab;background:#fff;color:var(--blue);cursor:grab;
+  font-size:13px;line-height:1;opacity:.55}
+figure.fig:hover .fighandle{opacity:1}
+.figrow{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;width:100%}
+.figrow.side{flex-direction:row;align-items:center;gap:3mm}
+.figrow.side img{flex:1 1 auto}
+.figlabel{font-weight:700;color:var(--blue);margin-bottom:1mm;text-align:center}
+.figlabel.side{flex:0 0 34%;text-align:start;margin:0}
+
+/* ── الصور داخل النصّ (inline) ── */
+.inlrow{display:flex;justify-content:center;align-items:flex-start;gap:2%;
+  flex-wrap:wrap;margin:1.2mm 0;line-height:0}
+.inl{display:inline-block;position:relative;vertical-align:top;line-height:0;
+  cursor:pointer;max-width:100%}
+.inl img{width:100%;height:auto;display:block;border-radius:2px}
+.inl.sel{outline:2px solid var(--blue);outline-offset:2px}
+.inlrow:has(>.inl.al-r:only-child){justify-content:flex-start}
+.inlrow:has(>.inl.al-l:only-child){justify-content:flex-end}
+.inllbl{display:block;color:var(--blue);font-weight:700;line-height:1.6}
+.inl.free{position:absolute;right:var(--ix,0);top:var(--iy,0);z-index:var(--iz,10);
+  cursor:move;box-shadow:0 1px 6px #0003}
+.inl.free.sel{outline:2px dashed var(--blue)}
+#paper img,#paper .inl{-webkit-user-drag:none;user-drag:none}
+#paper.dropping{outline:3px dashed var(--blue);outline-offset:-6px}
+
+/* ── مواضع الإدراج الجاهزة ── */
+.slot{display:inline-flex;align-items:center;gap:var(--sp-1);border:1.5px dashed var(--blue);
+  background:var(--blue-l);color:var(--blue);border-radius:var(--r-1);padding:0 var(--sp-2);
+  margin:.6mm 0;font-weight:700;cursor:pointer;line-height:1.7;font-size:.92em}
+.slot:hover{background:#dcebfb}
+
+/* ── شريط الصورة المحدَّدة ── */
+.inlbar,.figbar{position:absolute;bottom:100%;margin-bottom:6px;inset-inline-start:0;
+  z-index:45;display:flex;flex-wrap:wrap;gap:2px;align-items:center;background:var(--blue-d);
+  color:#fff;border-radius:var(--r-2);padding:3px 5px;box-shadow:0 3px 12px #0004;
+  line-height:1;max-width:100%}
+.inlbar button,.figbar .fb{border:0;background:transparent;color:#fff;min-width:24px;
+  height:24px;border-radius:5px;cursor:pointer;font:13px/1 var(--font);padding:0 5px}
+.inlbar button:hover,.figbar .fb:hover{background:#ffffff30}
+.inlbar button.on,.figbar .fb.on{background:#fff;color:var(--blue-d);font-weight:700}
+.inlbar span,.figbar .fv{font-size:11px;min-width:34px;text-align:center;color:#dbe6f2}
+.inlbar i,.figbar i{width:1px;height:16px;background:#ffffff40;margin:0 3px}
+.figbar .fgrp{display:flex;gap:2px;align-items:center;background:#ffffff1a;
+  border-radius:var(--r-1);padding:2px}
+.figcolors{flex-basis:100%;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;padding:3px 2px 1px}
+.figcolors label{display:flex;align-items:center;gap:5px;font-size:10.5px;color:#dbe6f2}
+.figcolors input{flex:1;height:14px}
+
+/* ── مقابض التحجيم ── */
+.inlh{position:absolute;width:14px;height:14px;background:#fff;border:2px solid var(--blue);
+  border-radius:50%;z-index:44;touch-action:none}
+.inlh.h-tl{top:-7px;left:-7px;cursor:nwse-resize}
+.inlh.h-tr{top:-7px;right:-7px;cursor:nesw-resize}
+.inlh.h-bl{bottom:-7px;left:-7px;cursor:nesw-resize}
+.inlh.h-br{bottom:-7px;right:-7px;cursor:nwse-resize}
+.fh{position:absolute;width:11px;height:11px;background:#fff;border:1.5px solid var(--blue);
+  border-radius:2px;z-index:35;box-shadow:0 1px 3px #0003;touch-action:none}
+.fh.nw{top:-6px;inset-inline-start:-6px;cursor:nwse-resize}
+.fh.ne{top:-6px;inset-inline-end:-6px;cursor:nesw-resize}
+.fh.sw{bottom:-6px;inset-inline-start:-6px;cursor:nesw-resize}
+.fh.se{bottom:-6px;inset-inline-end:-6px;cursor:nwse-resize}
+.fh.n{top:-6px;inset-inline-start:50%;margin-inline-start:-5px;cursor:ns-resize}
+.fh.s{bottom:-6px;inset-inline-start:50%;margin-inline-start:-5px;cursor:ns-resize}
+.fh.e{top:50%;margin-top:-5px;inset-inline-end:-6px;cursor:ew-resize}
+.fh.w{top:50%;margin-top:-5px;inset-inline-start:-6px;cursor:ew-resize}
+.fh.rot{bottom:-28px;inset-inline-start:50%;margin-inline-start:-7px;width:15px;height:15px;
+  border-radius:50%;cursor:grab;background:var(--blue);border-color:#fff}
+.fh.rot::after{content:'⟳';position:absolute;inset:0;color:#fff;font-size:11px;
+  display:flex;align-items:center;justify-content:center}
+
+/* ── طبقة الاقتصاص ── */
+.cropov{position:fixed;inset:0;background:#0009;z-index:120;touch-action:none}
+.cropbox{position:fixed;border:2px solid #fff;box-shadow:0 0 0 9999px #0007;cursor:move}
+.cropbox .cr{position:absolute;width:16px;height:16px;background:#fff;
+  border:2px solid var(--blue);border-radius:3px}
+.cropbox .c-tl{top:-9px;left:-9px;cursor:nwse-resize}
+.cropbox .c-tr{top:-9px;right:-9px;cursor:nesw-resize}
+.cropbox .c-bl{bottom:-9px;left:-9px;cursor:nesw-resize}
+.cropbox .c-br{bottom:-9px;right:-9px;cursor:nwse-resize}
+.cropbar{position:fixed;inset-inline:0;bottom:0;background:var(--blue-d);color:#fff;
+  padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.cropbar span{font-size:var(--fs-sm);color:#cfe0f0}

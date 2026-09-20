@@ -1,0 +1,27 @@
+<!-- ══════════ استوديو التحضير ══════════ -->
+<div id="studio" class="hidden no-print">
+  <div class="st-head">
+    <button class="btn sm" id="stClose" title="إغلاق" aria-label="إغلاق">✕</button>
+    <span id="stTitle" class="st-title"></span>
+  </div>
+  <div class="st-tabs" role="tablist">
+    <button data-sttab="gallery" class="on">معرض الدرس</button>
+    <button data-sttab="pdf">صفحات الكتاب</button>
+    <button data-sttab="mine">صور الورقة</button>
+  </div>
+  <div class="st-target" id="stTarget"></div>
+  <div class="st-bar" id="stBarGallery"></div>
+  <div class="st-bar hidden" id="stBarPdf"></div>
+  <div class="st-bar hidden" id="stBarMine"></div>
+  <div class="st-body">
+    <div class="st-pane on" id="stPaneGallery"><div class="st-grid" id="stGrid"></div></div>
+    <div class="st-pane" id="stPanePdf"><div id="stPages"></div></div>
+    <div class="st-pane" id="stPaneMine"><div class="st-list" id="stList"></div></div>
+  </div>
+  <div class="st-shot hidden" id="stShot">
+    <img id="stShotImg" alt="اللقطة">
+    <label><input type="checkbox" id="stClean" checked> تفريغ الخلفية</label>
+    <button class="btn primary" id="stShotOk">إدراج</button>
+    <button class="btn" id="stShotCancel">إعادة التحديد</button>
+  </div>
+</div>

@@ -1,0 +1,90 @@
+/* ═══ التجاوب : هاتف ← تاب ← حاسوب ═══
+   القاعدة : نقطة انكسار واحدة لكل تغيير في الهيكل ، وكل ما عداها يتمدّد وحده. */
+
+/* ── هاتف : حتى ٦٤٠ بكسل ── */
+@media screen and (max-width:640px){
+  :root{--navbar-h:56px;--topbar-h:48px;--fs:15px}
+
+  .topbar .tabs{display:none}                   /* التنقّل ينتقل إلى الأسفل */
+  .navbar{display:flex}
+  .brand{font-size:15px}
+  .gradepick{margin-inline-start:auto}
+  .gradepick select{max-width:52vw}
+
+  h2{margin:var(--sp-3) var(--sp-2) 6px}
+  .toolbar,.grid2,.cards,.weekgrid,.hint,ul.hol{margin-inline:var(--sp-2)}
+  .hero{margin:var(--sp-2);padding:var(--sp-3)}
+  .hero-stat{margin-inline-start:0;min-width:74px;text-align:start}
+  .cards{grid-template-columns:1fr}
+  .wrow{flex-wrap:wrap}
+  .wrow .d{min-width:auto}
+  .wrow .t{flex:1 0 100%;order:3;font-size:var(--fs-sm)}
+  .nbrow .dt{min-width:auto;font-size:11px}
+  .nbunit{margin:var(--sp-2)}
+
+  /* شريط المحرّر : صفّان لا أكثر ـ عنوان الحصة أعلاه ، والأدوات تحته ،
+     وما زاد يُطوى في لوحة «المزيد». */
+  .btn-more{display:inline-flex}
+  #editorBar .foldable{display:none}
+  #editorBar{gap:var(--sp-1);padding:6px var(--sp-2)}
+  #editorBar .btn{padding:7px 10px}
+  #editorBar .tb-nav{flex:1 0 100%;order:-1}
+  .ses-label{font-size:var(--fs-xs);line-height:1.4;white-space:normal;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  /* الحالة سطر واحد مشترك تحت الأزرار ، لا سطران منفصلان */
+  #editorBar .tb-status{flex:1 0 100%;justify-content:center;font-size:11px}
+  #editorBar .spacer{display:none}
+  /* الشعار لا يأخذ سطراً كاملاً في وضع الشاشة */
+  body.screenmode .logobox{order:-1;margin-inline-start:auto}
+  .fmtbar{margin-inline:var(--sp-2);overflow-x:auto;flex-wrap:nowrap;justify-content:flex-start}
+  .fmtbar button{flex:0 0 auto;min-width:42px;height:42px;font-size:17px}
+
+  /* الاستوديو يملأ الشاشة */
+  .st-grid{grid-template-columns:repeat(auto-fill,minmax(102px,1fr))}
+  .st-cell img{height:80px}
+  .st-item{flex-wrap:wrap}
+  .st-item .acts{flex:1 0 100%;justify-content:flex-start}
+}
+
+/* ── تاب : ٦٤١ إلى ١٠٢٣ ── */
+@media screen and (min-width:641px) and (max-width:1023px){
+  .tab{padding:6px var(--sp-2);font-size:13px}
+  .brand{font-size:16px}
+  .cards{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+}
+
+/* ── وضع الشاشة يُفرض دون ٨٦٠ بكسل ، ويبقى اختيارياً فوقها ── */
+@media screen and (max-width:859px){
+  body.a4mode #paper{padding:var(--sp-2)}
+}
+
+/* ── شاشة عريضة : الاستوديو يُرسى بجانب الورقة فترى الإدراج مباشرة.
+     الحدّ ١٠٠٠ بكسل ليشمل التاب أفقياً والحواسيب الصغيرة ، لا الحواسيب وحدها. ── */
+@media screen and (min-width:1000px){
+  body.studio-open #studio{inset:0 auto 0 0;width:min(46vw,760px);box-shadow:4px 0 22px #0005}
+  body.studio-open #view-editor,body.studio-open .topbar{margin-left:min(46vw,760px)}
+}
+
+/* ── أجهزة اللمس : كلّ مقبض وزرّ بحجم الإصبع ── */
+@media (pointer:coarse){
+  .inlbar,.figbar{padding:6px var(--sp-2);gap:var(--sp-1);border-radius:var(--r-4)}
+  .inlbar button,.figbar .fb{min-width:44px;height:44px;font-size:20px;border-radius:9px}
+  .inlbar span,.figbar .fv{font-size:15px;min-width:50px}
+  .inlbar i,.figbar i{height:28px}
+  .inlh{width:30px;height:30px;border-width:3px}
+  .inlh.h-tl{top:-15px;left:-15px} .inlh.h-tr{top:-15px;right:-15px}
+  .inlh.h-bl{bottom:-15px;left:-15px} .inlh.h-br{bottom:-15px;right:-15px}
+  .fh{width:26px;height:26px}
+  .cropbox .cr{width:30px;height:30px}
+  .cropbox .c-tl{top:-16px;left:-16px} .cropbox .c-tr{top:-16px;right:-16px}
+  .cropbox .c-bl{bottom:-16px;left:-16px} .cropbox .c-br{bottom:-16px;right:-16px}
+  .slot{padding:6px 14px;font-size:1em;margin:1.5mm 0}
+  .hctl button{min-width:38px;height:30px;font-size:17px}
+  .hctl .hv{line-height:30px;font-size:14px}
+  .secttl{min-height:34px}
+}
+
+/* ── الشاشات العالية الكثافة : حدود أدقّ ── */
+@media (min-resolution:2dppx){
+  .sheet td,.sheet th,.sectbox,.sectwrap{border-width:.5px}
+}

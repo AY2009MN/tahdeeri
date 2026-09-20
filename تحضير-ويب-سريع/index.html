@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- مولَّد آلياً من مجلد html/ بـ tools/build-html.cjs ـ لا يُحرَّر يدوياً -->
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -6,22 +7,32 @@
 <title>دفتر التحضير</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1b4c8c">
-<link rel="stylesheet" href="css/style.css?v=37">
+<meta name="description" content="دفتر تحضير الرياضيات ـ الصفّان الثامن والتاسع">
+<!-- التنسيق كبسولات : الرموز ، الأساس ، الهيكل ، العروض ، الورقة ، المحتوى ،
+     الصور ، الاستوديو ، التجاوب ، الطباعة. تُدرج آلياً من قائمة js/assets.js -->
+<link rel="stylesheet" href="css/tokens.css?v=38">
+<link rel="stylesheet" href="css/base.css?v=38">
+<link rel="stylesheet" href="css/shell.css?v=38">
+<link rel="stylesheet" href="css/views.css?v=38">
+<link rel="stylesheet" href="css/paper.css?v=38">
+<link rel="stylesheet" href="css/content.css?v=38">
+<link rel="stylesheet" href="css/images.css?v=38">
+<link rel="stylesheet" href="css/studio.css?v=38">
+<link rel="stylesheet" href="css/responsive.css?v=38">
+<link rel="stylesheet" href="css/print.css?v=38">
 </head>
 <body>
 
 <header class="topbar no-print">
   <div class="brand">دفتر التحضير</div>
-  <nav class="tabs">
-    <button class="tab active" data-view="home">الرئيسية</button>
-    <button class="tab" data-view="notebook">الدفتر</button>
-    <button class="tab" data-view="editor">التحضير</button>
-    <button class="tab" data-view="library">الكتب</button>
-    <button class="tab" data-view="settings">الإعدادات</button>
+  <nav class="tabs" aria-label="التنقّل">
+    <button class="tab active" data-view="home"><span class="ic">🏠</span>الرئيسية</button>
+    <button class="tab" data-view="notebook"><span class="ic">📘</span>الدفتر</button>
+    <button class="tab" data-view="editor"><span class="ic">✍</span>التحضير</button>
+    <button class="tab" data-view="library"><span class="ic">📚</span>الكتب</button>
+    <button class="tab" data-view="settings"><span class="ic">⚙</span>الإعدادات</button>
   </nav>
-  <div class="gradepick">
-    <select id="gradeSel"></select>
-  </div>
+  <div class="gradepick"><select id="gradeSel" aria-label="الشعبة"></select></div>
 </header>
 
 <!-- ══════════ الرئيسية ══════════ -->
@@ -34,10 +45,8 @@
     <div class="hero-stat"><b id="statDone">٠</b><span>حصة محضَّرة</span></div>
     <div class="hero-stat"><b id="statTotal">٠</b><span>إجمالي الحصص</span></div>
   </div>
-
   <h2>حصص اليوم</h2>
   <div id="todaySessions" class="cards"></div>
-
   <h2>الأسبوع الحالي</h2>
   <div id="weekList" class="weekgrid"></div>
 </section>
@@ -45,8 +54,8 @@
 <!-- ══════════ الدفتر ══════════ -->
 <section id="view-notebook" class="view hidden no-print">
   <div class="toolbar">
-    <input type="search" id="nbSearch" placeholder="ابحث عن درس…">
-    <select id="nbFilter">
+    <input type="search" id="nbSearch" placeholder="ابحث عن درس…" aria-label="بحث">
+    <select id="nbFilter" aria-label="تصفية">
       <option value="all">كل الحصص</option>
       <option value="done">المحضَّرة</option>
       <option value="todo">غير المحضَّرة</option>
@@ -58,30 +67,41 @@
 
 <!-- ══════════ محرّر التحضير ══════════ -->
 <section id="view-editor" class="view hidden">
-  <div class="toolbar no-print" id="editorBar">
-    <button class="btn" id="prevSes">‹ السابقة</button>
-    <span id="sesLabel" class="ses-label"></span>
-    <button class="btn" id="nextSes">التالية ›</button>
-    <span class="pick">
-      <select id="unitSel" title="اختر الوحدة"></select>
-      <select id="lessonSel" title="اختر الدرس"></select>
-      <select id="partSel" title="اختر الحصة"></select>
+  <div class="toolbar stickybar no-print" id="editorBar">
+    <span class="tb-nav">
+      <button class="btn" id="prevSes" title="الحصة السابقة" aria-label="الحصة السابقة">‹</button>
+      <span id="sesLabel" class="ses-label"></span>
+      <button class="btn" id="nextSes" title="الحصة التالية" aria-label="الحصة التالية">›</button>
     </span>
-    <button class="btn" id="btnToday" title="افتح تحضير اليوم">📅 اليوم</button>
+    <button class="btn primary" id="btnStudio" title="صور الكتاب : معرض الدرس وصفحات PDF">📷 استوديو الكتاب</button>
+    <button class="btn" id="btnMore">⋯ المزيد</button>
+
+    <span class="pick foldable" data-more="اختيار الوحدة والدرس والحصة">
+      <select id="unitSel" title="اختر الوحدة" aria-label="الوحدة"></select>
+      <select id="lessonSel" title="اختر الدرس" aria-label="الدرس"></select>
+      <select id="partSel" title="اختر الحصة" aria-label="الحصة"></select>
+    </span>
+    <button class="btn foldable" id="btnToday" data-more="📅 تحضير اليوم">📅 اليوم</button>
+    <button class="btn foldable" id="btnViewMode" data-more="تبديل وضع العرض">📄 مقاس A4</button>
+    <label class="fs foldable" data-more="مقاس خطّ الورقة">مقاس الخط
+      <select id="fsSel" aria-label="مقاس الخط"><option>12</option><option selected>14</option><option>16</option><option>18</option></select>
+    </label>
+    <label class="btn foldable" data-more="إدراج صورة من الجهاز">إدراج صورة<input type="file" id="imgFile" accept="image/*" hidden></label>
+    <button class="btn foldable" id="btnWorksheet" data-more="طباعة ورقة العمل">ورقة العمل</button>
+    <button class="btn foldable" id="btnFit" data-more="اضبط الصفحتين" title="تصغير الصور بالقدر اللازم حتى يتّسع المحتوى للصفحتين">اضبط الصفحتين</button>
+    <button class="btn foldable" id="btnLock" data-more="🔒 قفل التعديل" title="أدخل الرقم السرّي لفتح التعديل">🔒 مقفل</button>
+    <label class="btn sm foldable" data-more="كتابة يدوية للتاريخ والصف" title="عدم طباعة التاريخ والصف والحصة لتُكتب بخط اليد"><input type="checkbox" id="chkManualMeta"> كتابة يدوية للتاريخ</label>
+    <button class="btn foldable" id="btnBlank" data-more="طباعة نموذج فارغ" title="نموذج تحضير فارغ يُكتب بخطّ اليد">نموذج فارغ</button>
+
+    <button class="btn primary" id="btnPrint">🖨 طباعة</button>
     <span class="spacer"></span>
-    <label class="fs">مقاس الخط <select id="fsSel"><option>12</option><option selected>14</option><option>16</option><option>18</option></select></label>
-    <span id="saveState" class="savestate">محفوظ</span>
-    <span id="pagesInfo" class="pagesinfo"></span>
-    <button class="btn primary" id="btnCrop" title="انقر أولاً داخل المقدمة أو العرض ثم اختر اللقطة من صفحات الدرس">📷 إدراج من الكتاب</button>
-    <label class="btn">إدراج صورة<input type="file" id="imgFile" accept="image/*" hidden></label>
-    <button class="btn" id="btnWorksheet">ورقة العمل</button>
-    <button class="btn" id="btnFit" title="تصغير الصور بالقدر اللازم حتى يتّسع المحتوى للصفحتين">اضبط الصفحتين</button>
-    <button class="btn" id="btnLock" title="أدخل الرقم السرّي لفتح التعديل">🔒 مقفل</button>
-    <label class="btn sm" id="lblManualMeta" title="عدم طباعة التاريخ والصف والحصة لتُكتب بخط اليد"><input type="checkbox" id="chkManualMeta"> كتابة يدوية للتاريخ والصف</label>
-    <button class="btn" id="btnBlank" title="نموذج تحضير فارغ بلا تاريخ ولا صف ولا حصة ، يُكتب بخطّ اليد">نموذج فارغ</button>
-    <button class="btn primary" id="btnPrint">معاينة وطباعة</button>
+    <span class="tb-status">
+      <span id="saveState" class="savestate">محفوظ</span>
+      <span id="pagesInfo" class="pagesinfo"></span>
+    </span>
   </div>
-  <div class="fmtbar no-print" id="fmtBar">
+
+  <div class="fmtbar no-print" id="fmtBar" aria-label="تنسيق النصّ">
     <button data-cmd="bold" title="عريض"><b>B</b></button>
     <button data-cmd="underline" title="تسطير"><u>U</u></button>
     <i></i>
@@ -98,6 +118,7 @@
     <button data-cmd="undo" title="تراجع">↶</button>
     <button data-cmd="redo" title="إعادة">↷</button>
   </div>
+
   <div id="paper"></div>
 </section>
 
@@ -120,11 +141,16 @@
     <label>الفصل الدراسي <input id="stTerm" value="الأول"></label>
   </div>
 
+  <h2>وضع عرض الورقة</h2>
+  <p class="hint">«وضع الشاشة» يمدّد الأقسام بعرض الجهاز فتسهل الكتابة على الهاتف ،
+     و«مقاس A4» يعرضها كما تخرج من الطابعة. الطباعة نفسها A4 دائماً في الحالين.</p>
+  <div id="viewModeBox" class="toolbar"></div>
+
   <h2>عناصر القالب</h2>
   <p class="hint">أزِل أيّ عنصر لا تحتاجه من ورقة التحضير ـ يختفي من الشاشة والطباعة معاً.</p>
   <div id="sectionsBox" class="toolbar"></div>
-  <div style="margin:8px 12px">
-    <label class="btn"><input type="checkbox" id="stManualMeta"> عدم طباعة التاريخ والصف والحصة (تُترك الخانات فارغة لتُكتب يدوياً بخط اليد)</label>
+  <div class="toolbar">
+    <label class="btn"><input type="checkbox" id="stManualMeta"> عدم طباعة التاريخ والصف والحصة (تُترك فارغة لتُكتب بخط اليد)</label>
   </div>
 
   <h2>توزيع التواريخ</h2>
@@ -134,12 +160,12 @@
   </div>
 
   <h3>جدول الحصص الأسبوعي</h3>
-  <p class="hint">حدّد لكل صف أيام حصصه ورقم الحصة. أيّ تعديل هنا أو في التاريخ يعيد توزيع الحصص كلّها فوراً.</p>
+  <p class="hint">حدّد لكل شعبة أيام حصصها ورقم الحصة. أيّ تعديل هنا أو في التاريخ يعيد التوزيع فوراً.</p>
   <div id="timetable"></div>
 
   <h3>العطل والإجازات</h3>
   <div class="toolbar">
-    <input type="date" id="holDate">
+    <input type="date" id="holDate" aria-label="تاريخ العطلة">
     <input id="holLabel" placeholder="مناسبة العطلة">
     <button class="btn" id="addHol">إضافة</button>
   </div>
@@ -155,11 +181,9 @@
 
   <h2>قفل التعديل</h2>
   <p class="hint" id="lockState"></p>
-  <div class="toolbar">
-    <button class="btn" id="btnLockChange">تغيير الرقم السرّي</button>
-  </div>
+  <div class="toolbar"><button class="btn" id="btnLockChange">تغيير الرقم السرّي</button></div>
   <p class="hint">الرقم الابتدائي <b>١٩٨٥</b>. القفل يمنع التعديل على هذا الجهاز فقط ،
-     ويبقى التصفّح والطباعة متاحين. يُحفظ مبصوماً فلا يظهر الرقم نفسه في قاعدة البيانات.</p>
+     ويبقى التصفّح والطباعة متاحين. يُحفظ مبصوماً فلا يظهر الرقم في قاعدة البيانات.</p>
 
   <h2>المزامنة مع GitHub</h2>
   <div class="grid2">
@@ -169,7 +193,7 @@
     <label>رمز الوصول <input id="ghToken" type="password" placeholder="ghp_… يبقى على جهازك"></label>
   </div>
   <div class="toolbar">
-    <button class="btn primary" id="btnSyncPush">زامن البيانات والتعديلات مع GitHub</button>
+    <button class="btn primary" id="btnSyncPush">زامن مع GitHub</button>
     <button class="btn" id="btnSyncPull">اجلب من GitHub</button>
   </div>
   <p class="hint" id="syncMsg"></p>
@@ -177,59 +201,61 @@
      احصل عليه من GitHub ← Settings ← Developer settings ← Personal access tokens ، بصلاحية
      <code>Contents: Read and write</code> على هذا المستودع وحده.
      وانتبه: المستودع عامّ ، فما يُرفع يراه الجميع ـ إن أردت الخصوصية فاجعل المزامنة إلى مستودع خاصّ.</p>
-
 </section>
 
-<!-- ══════════ عارض الدرس مع الالتقاط ══════════ -->
-<div id="viewer" class="hidden no-print">
-  <div class="vbar">
-    <button class="btn" id="vClose" title="إغلاق العارض">✕</button>
-    <span id="vTitle" class="vtitle"></span>
-    <span class="spacer"></span>
-    <button class="btn" id="vZout" title="تصغير">−</button>
-    <button class="btn" id="vZin" title="تكبير">+</button>
+<!-- ══════════ شريط التنقّل السفلي (الهاتف) ══════════ -->
+<nav class="navbar no-print" aria-label="التنقّل السريع">
+  <button class="tab active" data-view="home"><span class="ic">🏠</span>الرئيسية</button>
+  <button class="tab" data-view="notebook"><span class="ic">📘</span>الدفتر</button>
+  <button class="tab" data-view="editor"><span class="ic">✍</span>التحضير</button>
+  <button class="tab" data-view="library"><span class="ic">📚</span>الكتب</button>
+  <button class="tab" data-view="settings"><span class="ic">⚙</span>الإعدادات</button>
+</nav>
+
+<!-- ══════════ لوحة «المزيد» ══════════ -->
+<div class="sheetpop no-print" id="morePop">
+  <div class="veil"></div>
+  <div class="pane">
+    <div class="grab"></div>
+    <h4>أدوات التحضير</h4>
+    <div class="opts" id="morePane"></div>
+    <div class="toolbar" style="justify-content:center;margin-top:12px">
+      <button class="btn" data-moreclose>إغلاق</button>
+    </div>
   </div>
-  <div class="vbar2">
-    <label>الدرس <select id="vLesson"></select></label>
-    <span class="vmeta" id="vRange"></span>
-    <button class="btn sm" id="vAll">كل الكتاب</button>
-    <label class="vgo">صفحة <input type="number" id="vPageNo" min="1"><button class="btn sm" id="vGo">اذهب</button></label>
-    <span class="spacer"></span>
-    <button class="btn sm" id="vSetFrom" title="اجعل الصفحة الظاهرة بداية هذا الدرس">بداية الدرس هنا</button>
-    <button class="btn sm" id="vSetTo" title="اجعل الصفحة الظاهرة نهاية هذا الدرس">نهاية الدرس هنا</button>
+</div>
+
+<!-- ══════════ استوديو التحضير ══════════ -->
+<div id="studio" class="hidden no-print">
+  <div class="st-head">
+    <button class="btn sm" id="stClose" title="إغلاق" aria-label="إغلاق">✕</button>
+    <span id="stTitle" class="st-title"></span>
   </div>
-  <div class="vbar3">
-    <span class="vtool">التحديد:
-      <button class="btn sm primary" id="vModeRect">▭ منتظم</button>
-      <button class="btn sm" id="vModeFree">✎ حرّ</button>
-    </span>
-    <span class="vmeta" id="vTarget"></span>
-    <span id="vFallback" class="hidden">
-      <label>الحصة <select id="vSes"></select></label>
-      <label>الموضع <select id="vSlot"></select></label>
-      <button class="btn sm" id="vText">أضف نصّاً</button>
-    </span>
+  <div class="st-tabs" role="tablist">
+    <button data-sttab="gallery" class="on">معرض الدرس</button>
+    <button data-sttab="pdf">صفحات الكتاب</button>
+    <button data-sttab="mine">صور الورقة</button>
   </div>
-  <div id="vPages"></div>
-  <div id="vShot" class="hidden">
-    <img id="vShotImg" alt="">
-    <label class="vlbl"><input type="checkbox" id="vClean" checked> تفريغ الخلفية</label>
-    <input id="vLabel" type="hidden">
-    <button class="btn primary" id="vShotOk">إدراج</button>
-    <button class="btn" id="vShotCancel">إعادة التحديد</button>
+  <div class="st-target" id="stTarget"></div>
+  <div class="st-bar" id="stBarGallery"></div>
+  <div class="st-bar hidden" id="stBarPdf"></div>
+  <div class="st-bar hidden" id="stBarMine"></div>
+  <div class="st-body">
+    <div class="st-pane on" id="stPaneGallery"><div class="st-grid" id="stGrid"></div></div>
+    <div class="st-pane" id="stPanePdf"><div id="stPages"></div></div>
+    <div class="st-pane" id="stPaneMine"><div class="st-list" id="stList"></div></div>
+  </div>
+  <div class="st-shot hidden" id="stShot">
+    <img id="stShotImg" alt="اللقطة">
+    <label><input type="checkbox" id="stClean" checked> تفريغ الخلفية</label>
+    <button class="btn primary" id="stShotOk">إدراج</button>
+    <button class="btn" id="stShotCancel">إعادة التحديد</button>
   </div>
 </div>
 
 <div id="printArea"></div>
 
-<script src="js/curriculum8.js?v=37"></script>
-<script src="js/curriculum9.js?v=37"></script>
-<script src="js/db.js?v=37"></script>
-<script src="js/figs.js?v=37"></script>
-<script src="js/inline.js?v=37"></script>
-<script src="js/bookmap.js?v=37"></script>
-<script src="js/books.js?v=37"></script>
-<script src="js/sync.js?v=37"></script>
-<script src="js/app.js?v=37"></script>
+<script src="js/assets.js?v=38"></script>
+<script src="js/loader.js?v=38"></script>
 </body>
 </html>

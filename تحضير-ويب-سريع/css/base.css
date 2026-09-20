@@ -1,0 +1,61 @@
+/* ═══ الأساس : التصفير ، الخطّ ، الأزرار ، الحقول ، الأدوات المشتركة ═══ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font);font-size:var(--fs);-webkit-text-size-adjust:100%}
+body{overflow-x:hidden}
+img{max-width:100%}
+
+.hidden{display:none!important}
+.spacer{flex:1}
+h2{font-size:17px;margin:var(--sp-4) var(--sp-3) var(--sp-2)}
+h3{font-size:var(--fs);margin:var(--sp-3) var(--sp-3) var(--sp-1)}
+.hint{color:var(--ink-3);font-size:var(--fs-sm);margin:var(--sp-1) var(--sp-3);line-height:1.7}
+
+/* ── الأزرار ── */
+.btn{background:#fff;border:1px solid var(--edge);border-radius:var(--r-2);
+  padding:7px 13px;min-height:var(--tap);font-family:inherit;font-size:14px;
+  cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;
+  justify-content:center;gap:6px;line-height:1.2}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.sm{padding:4px 9px;font-size:12.5px;border-radius:var(--r-1);min-height:32px}
+.btn:hover{filter:brightness(.97)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+label.btn{user-select:none}
+label.btn input[type=checkbox]{margin:0;cursor:pointer}
+
+/* ── الحقول ── */
+input,select,textarea{font-family:inherit;font-size:14px;padding:7px 9px;
+  min-height:var(--tap);border:1px solid var(--edge);border-radius:var(--r-2);
+  background:#fff;color:var(--ink);max-width:100%}
+input[type=checkbox]{min-height:0}
+
+/* ── تجميعات ── */
+.toolbar{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;margin:10px var(--sp-3)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:10px;margin:0 var(--sp-3)}
+.grid2 label{display:flex;flex-direction:column;gap:var(--sp-1);
+  font-size:var(--fs-sm);color:var(--ink-2)}
+
+/* ── التنبيهات والرسائل ── */
+.banner{margin:10px var(--sp-3);padding:11px 14px;border-radius:var(--r-3);
+  font-size:14px;line-height:1.7;background:#fff6e5;border:1px solid #e6b45a;color:#6a4a10}
+.banner.err{background:#fdecec;border-color:#e08080;color:#7a1c1c}
+.banner code{background:#00000010;padding:1px 6px;border-radius:5px;font-family:inherit;font-weight:700}
+.banner-actions{display:flex;gap:var(--sp-2);margin-top:var(--sp-2);flex-wrap:wrap}
+.banner.slim{padding:6px var(--sp-3);font-size:.92em;display:flex;align-items:center;gap:var(--sp-2)}
+.banner.slim .bx{margin-inline-start:auto;border:0;background:transparent;cursor:pointer;
+  font-size:20px;line-height:1;padding:0 6px;color:inherit}
+
+.toast{position:fixed;bottom:calc(var(--navbar-h) + 22px);left:50%;transform:translateX(-50%);
+  background:var(--green);color:#fff;padding:9px 18px;border-radius:var(--r-pill);
+  font-size:14px;z-index:300;box-shadow:var(--sh-3);transition:opacity .4s;max-width:90vw;text-align:center}
+.toast.out{opacity:0}
+
+/* ── شرائط تمرير أنحف على الحاسوب ── */
+@media (pointer:fine){
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#c3ccd8;border-radius:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+}
