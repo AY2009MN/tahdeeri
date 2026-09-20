@@ -24,8 +24,13 @@ async function pdfLib() {
 const lessonRange = (gid, code) =>
   (S.pageMap?.[gid] || {})[code] || (window.BOOK_PAGES[gid] || {})[code] || null;
 
-/* ترقيم الكتاب المطبوع مقابل صفحات PDF (الغلاف والمقدمات تزيح الجزء الثاني) */
-const PAGE_SHIFT = { '8': { pdf: 144, printed: 130, big: 14 }, '9': { pdf: 135, printed: 120, big: 15 } };
+/* ترقيم الكتاب المطبوع مقابل صفحات PDF.
+   الغلاف يزيح الجزء الأوّل صفحةً واحدة ، ثم تأتي صفحات فاصلة بلا ترقيم بين
+   الجزأين فتزيد الإزاحة. الحدود مقيسة من الكتابين نفسيهما بقراءة رقم الصفحة
+   المطبوع في كل صفحة ومقارنته برقمها في الملف :
+     الثامن : ١..١٢٤ إزاحة ١ ، ثمّ ١٣ صفحة بلا ترقيم ، ومن ١٣٨ إزاحة ١٤.
+     التاسع : ١..١١٤ إزاحة ١ ، ثمّ ١٤ صفحة بلا ترقيم ، ومن ١٢٩ إزاحة ١٥. */
+const PAGE_SHIFT = { '8': { pdf: 138, printed: 124, big: 14 }, '9': { pdf: 129, printed: 114, big: 15 } };
 const printedPage = (p, gid = grade) => {
   const k = PAGE_SHIFT[gid];
   return Math.max(1, p - (k && p >= k.pdf ? k.big : 1));

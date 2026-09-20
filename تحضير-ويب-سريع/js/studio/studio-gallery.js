@@ -40,6 +40,14 @@ function galleryOfUnit(gid, code) {
   return out;
 }
 
+/** هل لدرس الحصة الحالية صور في المعرض (أو في وحدته)؟ */
+function galleryHasImages() {
+  const s = curSession();
+  if (!s) return false;
+  const code = GAL.code || s.code;
+  return galleryOf(grade, code).length > 0 || galleryOfUnit(grade, code).length > 0;
+}
+
 /** ما يُعرض الآن ، مع سبب اختياره */
 function galleryItems() {
   if (GAL.q) return { items: gallerySearchAll(grade, GAL.q.trim()), note: '' };

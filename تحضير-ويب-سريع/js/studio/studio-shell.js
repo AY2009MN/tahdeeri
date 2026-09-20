@@ -21,7 +21,11 @@ function openStudio(tab) {
   byId('studio').classList.remove('hidden');
   document.body.classList.add('studio-open');
   applyViewMode();          // عرض الورقة تقلّص بإرساء اللوحة ، فيُعاد حساب التصغير
-  studioTab(tab || ST.tab);
+  let want = tab || ST.tab;
+  // دروس لم تُقصَّ صورها بعد (آخر وحدات التاسع) : نفتح على صفحات الكتاب
+  // مباشرة بدل معرض فارغ ، فالمقصود إدراج صورة لا رؤية لا شيء.
+  if (want === 'gallery' && !galleryHasImages()) want = 'pdf';
+  studioTab(want);
 }
 
 function closeStudio() {

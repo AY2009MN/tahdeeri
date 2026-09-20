@@ -35,11 +35,25 @@ function parse(file) {
   return null;
 }
 
-/** رمز الدرس كما هو في ملفات المنهج : «٢ ـ ٣» ، «تقويم ٢» ، «مراجعة» */
+/* رموز دروس المنهج ـ إليها تُنسب الصور ، فما لا يطابقها لا يصل إليه المعلّم */
+global.window = {};
+eval(fs.readFileSync(path.join(ROOT, 'js/data/curriculum8.js'), 'utf8'));
+eval(fs.readFileSync(path.join(ROOT, 'js/data/curriculum9.js'), 'utf8'));
+const KNOWN = { 8: [], 9: [] };
+for (const g of ['8', '9'])
+  global.window['CURRICULUM_' + g].units.forEach(u => u.lessons.forEach(l => KNOWN[g].push(l.code)));
+
+/** رمز الدرس كما هو في ملفات المنهج : «٢ ـ ٣» ، «تقويم ٢» ، «مراجعة».
+    أسئلة التقويم تُسمّى أحياناً برقم درس يلي آخر دروس الوحدة (g8-4-6_obj1)
+    بدل الحرف t ، فلا يوجد لها درس فتضيع الصورة. فما لم يطابق درساً في
+    المنهج نردّه إلى تقويم وحدته إن وُجد. */
 function code(p) {
   if (p.unit === 'rev' || /^t\d+$/.test(p.unit)) return 'مراجعة';
   if (p.lesson === 't') return `تقويم ${ar(p.unit)}`;
-  return `${ar(p.unit)} ـ ${ar(p.lesson)}`;
+  const direct = `${ar(p.unit)} ـ ${ar(p.lesson)}`;
+  if (KNOWN[p.g].includes(direct)) return direct;
+  const review = `تقويم ${ar(p.unit)}`;
+  return KNOWN[p.g].includes(review) ? review : direct;
 }
 
 const out = { 8: {}, 9: {} };
