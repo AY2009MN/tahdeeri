@@ -3,10 +3,15 @@
    وتجلبها في أيّ جهاز آخر. تحتاج رمز وصول شخصياً بصلاحية contents.
    الرمز يبقى على جهازك وحده ولا يُرفع أبداً ـ يُنزع من البيانات قبل الرفع. */
 
+/* المستودع الافتراضي خاصّ لا عامّ : المزامنة ترفع التحضيرات وصور الكتاب ،
+   فلا يصحّ أن يكون المقصد الافتراضي مستودعاً يراه الناس. من غيّره يبقى على
+   اختياره ، فالقيمة المحفوظة تسبق الافتراضية. */
+const DEFAULT_REPO = 'AY2009MN/tahdeeri-data';
+
 const GH = {
   get cfg() {
     const g = S.gh || {};
-    return { repo: g.repo || 'AY2009MN/tahdeeri', branch: g.branch || 'main',
+    return { repo: g.repo || DEFAULT_REPO, branch: g.branch || 'main',
              path: g.path || 'بيانات/daftar-data.json', token: g.token || '' };
   },
   api(path, token, opts = {}) {
@@ -115,7 +120,7 @@ async function syncPull() {
 
 function wireSync() {
   const g = S.gh || {};
-  setVal('ghRepo', g.repo || 'AY2009MN/tahdeeri');
+  setVal('ghRepo', g.repo || DEFAULT_REPO);
   setVal('ghBranch', g.branch || 'main');
   setVal('ghPath', g.path || 'بيانات/daftar-data.json');
   setVal('ghToken', g.token);
