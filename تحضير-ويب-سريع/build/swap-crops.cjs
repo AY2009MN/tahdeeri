@@ -31,8 +31,14 @@ for (const r of rows) {
   const lines = s ? String(s[r.field] || '').split('\n') : [];
   const i = lines.findIndex(l => l.replace(/^##\s*/, '').trim() === r.head.trim());
   const m = i >= 0 && (lines[i + 1] || '').match(/^\[\[img:img\/([^|\]]+)\|(\d+)\]\]$/);
-  if (!m || m[1] !== r.old) { bad.push(`${r.code} · ${r.head.slice(0, 30)} ← ${m ? m[1] : 'لا سطر صورة'}`); continue; }
-  if (r.neu === null) { lines.splice(i + 1, 1); ok.push(`${r.old} ← حُذفت (لا مقابل لها في الكتاب)`); }
+  if (i < 0) { bad.push(`${r.code} · ${r.head.slice(0, 30)} ← لا عنوان بهذا النصّ`); continue; }
+  if (r.old === null) {                       // عنوانٌ بلا صورة : نُلحق واحدة
+    if (m) { bad.push(`${r.code} · ${r.head.slice(0, 30)} ← عليه صورة أصلاً (${m[1]})`); continue; }
+    lines.splice(i + 1, 0, `[[img:img/${r.neu}|89]]`);
+    ok.push(`+ ${r.neu}  ← ${r.head.slice(0, 34)}`);
+  }
+  else if (!m || m[1] !== r.old) { bad.push(`${r.code} · ${r.head.slice(0, 30)} ← ${m ? m[1] : 'لا سطر صورة'}`); continue; }
+  else if (r.neu === null) { lines.splice(i + 1, 1); ok.push(`${r.old} ← حُذفت (لا مقابل لها في الكتاب)`); }
   else { lines[i + 1] = `[[img:img/${r.neu}|89]]`; ok.push(`${r.old} → ${r.neu}`); }
   if (apply) s[r.field] = lines.join('\n');
 }
