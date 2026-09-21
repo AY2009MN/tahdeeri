@@ -108,6 +108,7 @@ async function start() {
   wireSaveGuard();
   await initLock();
   wireSync();
+  wireBackup();
   applyViewMode();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:')
