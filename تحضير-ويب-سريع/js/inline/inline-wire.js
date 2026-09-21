@@ -1,8 +1,13 @@
 /* ═══ ربط تفاعل الصور داخل النصّ ═══ */
 
+/* القفل يمنع الكتابة ، وعليه أن يمنع الصور مثلها : كان المقفل يُحدَّد فيه
+   الصورة فيظهر شريطها فتُكبَّر أو تُحذف بلمسةٍ عابرة. */
+const inlLocked = () => typeof LOCK !== 'undefined' && !LOCK.open;
+
 /** النقر : موضع إدراج ، أو زرّ في الشريط ، أو تحديد صورة ، أو إلغاء التحديد */
 function wireInlineClick(paper) {
   paper.addEventListener('click', async e => {
+    if (inlLocked()) return inlDeselect();
     const slot = e.target.closest('.slot');
     if (slot) {
       e.preventDefault();
@@ -37,6 +42,7 @@ function wireInlineDrag(paper) {
   let drag = null;
 
   paper.addEventListener('pointerdown', e => {
+    if (inlLocked()) return;
     const h = e.target.closest('.inlh');
     const sp = e.target.closest('.inl');
     if (!sp) return;
@@ -81,6 +87,7 @@ function wireInlineDrag(paper) {
 /** لوحة المفاتيح : حذف الصورة ، وتحريكها بالأسهم في الوضع الحرّ */
 function wireInlineKeys(paper) {
   document.addEventListener('keydown', e => {
+    if (inlLocked()) return;
     if (!INL.sel || !document.contains(INL.sel)) return;
     const sp = INL.sel;
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return inlRemove(sp); }

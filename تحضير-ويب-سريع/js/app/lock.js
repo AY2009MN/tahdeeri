@@ -15,6 +15,8 @@ function lockApply() {
   document.body.classList.toggle('locked', !LOCK.open);
   $$('#paper [contenteditable]').forEach(el =>
     el.setAttribute('contenteditable', LOCK.open ? 'true' : 'false'));
+  // صورةٌ محدَّدة وقت الإقفال يبقى شريطها معروضاً ـ نرفعه مع القفل
+  if (!LOCK.open && typeof inlDeselect === 'function') inlDeselect();
   const b = byId('btnLock');
   if (b) {
     b.textContent = LOCK.open ? '🔓 مفتوح' : '🔒 مقفل';

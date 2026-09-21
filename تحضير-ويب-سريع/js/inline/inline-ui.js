@@ -79,10 +79,13 @@ function inlRestoreFree(root) {
 /** حذف صورة مع تنظيف صفّها الفارغ */
 function inlRemove(sp) {
   const row = sp.parentElement;
+  /* الصندوق يُمسَك قبل النزع : حذف آخر صورة يُزيل صفّها ، فكان الحفظ يذهب
+     إلى أوّل صندوق في الورقة لا إلى الذي تغيّر ـ فتعود الصورة عند العودة. */
+  const box = sp.closest('.sectbox');
   sp.remove();
   if (row.classList.contains('inlrow') && !row.children.length) row.remove();
   INL.sel = null;
-  inlSave(row.isConnected ? row : $('#paper .sectbox'));
+  inlSave(box || row);
 }
 
 /** تنفيذ أمر من شريط الصورة ـ يعيد true إن اكتفى بنفسه فلا يُعاد التحديد */
