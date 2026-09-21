@@ -7,8 +7,15 @@ global.window = {};
 for (const g of ['8', '9']) eval(fs.readFileSync(path.join(ROOT, 'js/data/curriculum' + g + '.js'), 'utf8'));
 const C = { 8: window.CURRICULUM_8, 9: window.CURRICULUM_9 };
 const F = ['intro', 'show', 'show2', 'close', 'evalx'];
-const NEED = /مثال|دورك الآن|اِستكشِف|استكشف|خذ وناقش|حلّ وناقش|فكّر وناقش|نشاط/;
-const SELF = /تمارين ذاتية|تمرين ذاتي/;
+/* الوضع الافتراضي : العناصر المعروفة (مثال ، دورك الآن ، نشاط…).
+   مع --ideas : كلّ عنوان يذكر صفحةً من الكتاب ـ ومنه «الفكرة الأولى : …»
+   وهي القواعد والتعريفات التي تحتاج صندوقها من الكتاب. */
+const NEED = process.argv.includes('--ideas')
+  ? /ص\s*\(/
+  : /مثال|دورك الآن|اِستكشِف|استكشف|خذ وناقش|حلّ وناقش|فكّر وناقش|نشاط/;
+/* التمارين لا صور لها ، وكذلك حصص التقويم والمراجعة فكلّها حلُّ بنود. */
+const SELF = /تمارين ذاتية|تمرين ذاتي|البنود|تقويم الوحدة|مهارات التفكير|مهارات تفكير|نموذج اختبار/;
+const SKIP = /^(تقويم|مراجعة)/;
 const AR = '٠١٢٣٤٥٦٧٨٩';
 const num = s => { let n = ''; for (const c of s) { const i = AR.indexOf(c); if (i >= 0) n += i; else if (/[0-9]/.test(c)) n += c; } return n ? +n : null; };
 
@@ -18,7 +25,7 @@ function scan() {
     for (const f of F) {
       const L = String(s[f] || '').split('\n');
       L.forEach((ln, i) => {
-        if (!/^##/.test(ln) || !NEED.test(ln) || SELF.test(ln)) return;
+        if (!/^##/.test(ln) || !NEED.test(ln) || SELF.test(ln) || SKIP.test(l.code)) return;
         if (/^\[\[img:img\//.test(L[i + 1] || '')) return;
         out.push({ g, unit: u.name || u.title || '', code: l.code, ses: si, field: f,
                    page: num((ln.match(/ص\s*\(?\s*([٠-٩0-9]+)/) || [])[1] || ''),
@@ -32,7 +39,7 @@ function scan() {
 module.exports = { scan };
 
 if (require.main === module) {
-  const [g, unit] = process.argv.slice(2);
+  const [g, unit] = process.argv.slice(2).filter(a => !a.startsWith('--'));
   let rows = scan();
   if (g) rows = rows.filter(r => r.g === g);
   if (unit) rows = rows.filter(r => r.code.startsWith(unit));
