@@ -94,23 +94,46 @@ function wireFigHandles(paper) {
   paper.addEventListener('pointercancel', end);
 }
 
+/* اللصق والإفلات : طريقان مباشران بلا مرورٍ على الاستوديو.
+   القفل يمنعهما كما يمنع بقيّة التعديل ، والصورة تنزل في القسم الذي أُفلتت
+   عليه لا في قسمٍ ثابت ، ويُبرَز ذلك القسم أثناء السحب. */
 function wireFigDrop(paper) {
+  let over = null;
+  const mark = box => {
+    if (over === box) return;
+    over?.classList.remove('dropto');
+    over = box;
+    over?.classList.add('dropto');
+  };
+
   paper.addEventListener('paste', e => {
+    if (!LOCK.open) return;
     const items = [...(e.clipboardData ? e.clipboardData.items : [])]
       .filter(it => it.type.startsWith('image/'));
-    if (!items.length) return;
+    if (!items.length) return;                       // نصٌّ عاديّ ـ يتركه للمتصفّح
     e.preventDefault();
     insertImage(items[0].getAsFile());
   });
+
   paper.addEventListener('dragover', e => {
-    if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); paper.classList.add('dropping'); }
+    if (!LOCK.open || !e.dataTransfer) return;
+    if (![...e.dataTransfer.types].includes('Files')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    mark(e.target.closest('.sectbox[data-f]'));
   });
-  paper.addEventListener('dragleave', () => paper.classList.remove('dropping'));
+
+  paper.addEventListener('dragleave', e => {
+    if (!e.relatedTarget || !paper.contains(e.relatedTarget)) mark(null);
+  });
+
   paper.addEventListener('drop', e => {
-    const f = [...(e.dataTransfer.files || [])].find(x => x.type.startsWith('image/'));
+    const f = LOCK.open
+      && [...(e.dataTransfer.files || [])].find(x => x.type.startsWith('image/'));
+    mark(null);
     if (!f) return;
     e.preventDefault();
-    paper.classList.remove('dropping');
+    inlTargetAtPoint(e.clientX, e.clientY);
     insertImage(f);
   });
 }

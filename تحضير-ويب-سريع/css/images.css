@@ -38,7 +38,6 @@ figure.fig:hover .fighandle{opacity:1}
   cursor:move;box-shadow:0 1px 6px #0003}
 .inl.free.sel{outline:2px dashed var(--blue)}
 #paper img,#paper .inl{-webkit-user-drag:none;user-drag:none}
-#paper.dropping{outline:3px dashed var(--blue);outline-offset:-6px}
 
 /* ── مواضع الإدراج الجاهزة ── */
 .slot{display:inline-flex;align-items:center;gap:var(--sp-1);border:1.5px dashed var(--blue);
@@ -97,3 +96,6 @@ figure.fig:hover .fighandle{opacity:1}
 .cropbar{position:fixed;inset-inline:0;bottom:0;background:var(--blue-d);color:#fff;
   padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
 .cropbar span{font-size:var(--fs-sm);color:#cfe0f0}
+
+/* ── القسم الذي ستقع عليه الصورة عند السحب من الجهاز ── */
+.sectbox.dropto{outline:3px dashed var(--blue);outline-offset:-3px;background:#e8f2fb}

@@ -83,6 +83,10 @@ function wireStudioHead(v) {
       else alert('افتح ورقة التحضير أوّلاً.');
     }
   });
+  // اختيار القسم من القائمة يكفي ـ زرّ «تثبيت» صار تأكيداً لا شرطاً
+  v.addEventListener('change', e => {
+    if (e.target.id === 'stSlot' && inlSetTarget(e.target.value)) studioHead();
+  });
 }
 
 function wireStudio() {
@@ -101,8 +105,10 @@ function wireStudio() {
 
 /** يدرج صورة في الهدف ، ويغلق اللوحة على الشاشات الضيّقة ليرى المعلّم النتيجة */
 async function studioInsert(dataUrl) {
-  if (!inlTarget()) {
-    alert('اختر موضع الإدراج من أعلى اللوحة أوّلاً.');
+  /* لا نوقف المعلّم ليختار موضعاً : إن لم يكن ثمّة هدف نُدرج في «العرض» ،
+     وهو موضع الشرح ، ثمّ له أن ينقل الصورة بسهمَي الشريط. */
+  if (!inlTarget() && !inlSetTarget('show') && !inlSetTarget('intro')) {
+    alert('افتح ورقة التحضير أوّلاً.');
     return false;
   }
   await insertInline(dataUrl);

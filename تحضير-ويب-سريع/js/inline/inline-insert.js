@@ -35,6 +35,22 @@ function inlSetTarget(field) {
   return true;
 }
 
+/** يجعل القسم الواقع تحت نقطة الشاشة هدفَ الإدراج ، ويضع المؤشّر عندها.
+    يُستعمل مع السحب والإفلات : الصورة تنزل حيث أفلتها المعلّم لا في قسمٍ ثابت. */
+function inlTargetAtPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  const box = el && el.closest('#paper .sectbox[data-f]');
+  if (!box || !inlSetTarget(box.dataset.f)) return false;
+  let caret = null;
+  if (document.caretRangeFromPoint) caret = document.caretRangeFromPoint(x, y);
+  else if (document.caretPositionFromPoint) {
+    const p = document.caretPositionFromPoint(x, y);
+    if (p) { caret = document.createRange(); caret.setStart(p.offsetNode, p.offset); caret.collapse(true); }
+  }
+  if (caret && box.contains(caret.startContainer)) INL.range = caret;
+  return true;
+}
+
 /** العرض المناسب للصورة بحسب نسبتها ـ الطويلة أضيق لتبقى الورقة متّسقة */
 function inlWidthFor(ratio) {
   return ratio > 0.9 ? 55 : ratio > 0.5 ? 75 : 92;
