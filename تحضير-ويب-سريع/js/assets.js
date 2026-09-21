@@ -7,37 +7,25 @@
 
 (function (root) {
   const STYLES = [
-    'tokens',      // الرموز التصميمية : الألوان والمقاسات والمسافات
-    'base',        // التصفير والخطّ والأزرار والحقول
-    'shell',       // الشريط العلوي والتنقّل واللوحة المنسدلة
-    'views',       // الرئيسية والدفتر والمكتبة والإعدادات
-    'paper',       // ورقة A4 وأقسامها
-    'content',     // تنسيق المحتوى وورقة العمل والنموذج الفارغ
-    'images',      // الصور : التحديد والشريط والمقابض والاقتصاص
-    'studio',      // استوديو الكتاب
-    'responsive',  // التجاوب : هاتف ← تاب ← حاسوب
-    'print'        // الطباعة ـ آخر الملفات ليغلب ما قبله
+    'base',        // الرموز التصميمية ، التصفير والخطّ والأزرار ، الشريط والتنقّل
+    'paper',       // العروض ، وورقة A4 وأقسامها ، وتنسيق المحتوى وورقة العمل
+    'images',      // الصور : التحديد والشريط والمقابض والاقتصاص ، واستوديو الكتاب
+    'responsive'   // التجاوب هاتف ← تاب ← حاسوب ، ثمّ الطباعة ـ آخرها ليغلب ما قبله
   ];
 
   /* الترتيب مهمّ : البيانات ثم القاعدة ثم ما يبني عليها ، والإقلاع آخراً. */
   const SCRIPTS = [
     'data/curriculum8', 'data/curriculum9', 'data/bookmap', 'data/gallery',
-    'core/db', 'core/utils', 'core/rich', 'core/state',
-    'data/plan', 'data/schedule',
-    'figs/image-fx', 'figs/figs-view', 'figs/figs-bar', 'figs/figs-wire',
-    'inline/inline-model', 'inline/inline-insert', 'inline/inline-ui',
-    'inline/inline-crop', 'inline/inline-wire',
-    'sheet/sheet-head', 'sheet/sheet-body', 'sheet/blank',
-    'editor/viewmode', 'editor/flow', 'editor/fit', 'editor/editor', 'editor/print',
-    'studio/studio-shell', 'studio/studio-gallery', 'studio/studio-pdf', 'studio/studio-render',
-    'studio/studio-capture', 'studio/studio-wire', 'studio/studio-manage',
-    'views/views', 'views/library', 'views/settings',
-    'app/lock', 'app/github', 'app/sync', 'app/backup', 'app/morepanel',
-    'app/wire-editor', 'app/wire-settings', 'app/boot'
+    'core/base', 'core/state', 'data/plan', 'data/schedule',
+    'figs/image-fx', 'figs/figs',
+    'inline/inline', 'inline/inline-edit',
+    'sheet/sheet', 'editor/layout', 'editor/editor',
+    'studio/studio-shell', 'studio/studio-pdf', 'studio/studio-tools',
+    'views/views', 'app/lock', 'app/cloud', 'app/wire', 'app/boot'
   ];
 
   const API = {
-    VERSION: '39',
+    VERSION: '40',
     STYLES, SCRIPTS,
     cssPaths: () => STYLES.map(f => `css/${f}.css`),
     jsPaths: () => SCRIPTS.map(f => `js/${f}.js`)

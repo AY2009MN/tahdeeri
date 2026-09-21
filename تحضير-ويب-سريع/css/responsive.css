@@ -102,3 +102,57 @@
 @media (min-resolution:2dppx){
   .sheet td,.sheet th,.sectbox,.sectwrap{border-width:.5px}
 }
+/* ═══ الطباعة ═══
+   الطباعة لا تتبع وضع العرض أبداً : مهما كان حجم الشاشة ، تخرج الورقة بمقاس
+   A4 الحقيقي ٢١٠×٢٩٧مم بحدود سوداء صريحة. */
+@page{size:A4;margin:0}
+
+@media print{
+  html,body{background:#fff}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+
+  /* لا يُطبع إلّا محتوى الورقة */
+  .no-print,.topbar,.navbar,.sheetpop,#studio,.cropov,.toast,.banner,
+  .view:not(#view-editor){display:none!important}
+  .figbar,.fighandle,.fh,.inlbar,.inlh,.hctl{display:none!important}
+  figure.fig.sel,.inl.sel{outline:none}
+  .inl.free{box-shadow:none}
+
+  #paper{padding:0;gap:0;display:flex!important;zoom:1!important}
+  .tscroll{display:contents!important}
+  #printArea{display:none!important}
+
+  /* الهندسة الثابتة ـ تتجاوز وضع الشاشة */
+  .sheet,.wsheet{box-shadow:none!important;margin:0;border-radius:0!important;
+    width:210mm!important;height:297mm!important;max-width:none!important;
+    overflow:hidden!important;padding:10mm 11mm!important;font-size:14px!important;
+    page-break-after:always;break-after:page}
+  .sheet::before{display:none!important}
+  .sheet>.sect.grow{flex:1 1 0!important;min-height:0!important}
+  .sectwrap,.sectbox{overflow:hidden!important}
+  /* سقف الأسطر يمنع الصناديق النصّية من التمدّد ، لكنّه لا يُطبَّق على صندوق
+     فيه صورة ـ وإلّا قُصّت الصورة في الطباعة وهي ظاهرة على الشاشة. هو الاستثناء
+     نفسه المعمول به في paper.css ، ولولا تكراره هنا لألغاه ‎!important‎. */
+  .sectwrap.lines:not(:has(.inl)):not(:has(.figs)),
+  .sectbox.lines:not(:has(.inl)){max-height:calc(4 * 1.6em + 6mm)!important}
+  .sheet:last-child,.wsheet:last-child{page-break-after:auto;break-after:auto}
+
+  /* وضوح الحبر */
+  .sheet img{opacity:1!important;image-rendering:auto}
+  .sheet td,.sheet th{border-color:#000!important}
+  .lbl{background:#d9d9d9!important;color:#000!important}
+  .val{color:#b00000!important}
+  .valb{color:#123f7a!important}
+  .sectbox,.sectwrap{color:#000!important}
+  .figcap{color:#333!important}
+  .overflowwarn{border-bottom:0!important}
+  .slot{border-style:dotted;background:none}
+  .wcell{border:1px dashed #aaa}
+
+  /* النموذج الفارغ : كل الأسطر والحدود سوداء */
+  .sheet.blank,.sheet.blank *{color:#000!important}
+  .sheet.blank td,.sheet.blank th,.sheet.blank .sectwrap,.sheet.blank .secttl{border-color:#000!important}
+  .sheet.blank .rline{border-bottom-color:#000!important}
+  .sheet.blank .sectwrap.ruled{background-image:repeating-linear-gradient(to bottom,
+    transparent 0 calc(8mm - 1px),#000 calc(8mm - 1px) 8mm)!important}
+}
