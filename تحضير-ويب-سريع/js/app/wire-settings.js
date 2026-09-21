@@ -88,15 +88,23 @@ function wireTransfer() {
   };
   bind('btnExport', 'onclick', () => exportAll(false));
   bind('btnExportBooks', 'onclick', () => exportAll(true));
+  /* الاستيراد يفحص المحتوى لا الامتداد : لاحقة .daftar مجهولة عند الأجهزة ،
+     فلو قيّدنا المنتقي بها لظهر ملفّ النسخة باهتاً على التاب فتعذّر اختياره. */
   bind('impFile', 'onchange', async e => {
     const f = e.target.files[0];
     if (!f) return;
-    try {
-      const data = JSON.parse(await f.text());
-      if (!confirm('سيُستبدل ما في هذا الجهاز بمحتوى الملف. متابعة؟')) return;
-      await DB.restore(data);
-      location.reload();
-    } catch { alert('الملف غير صالح. اختر ملف .daftar أو .json صادراً من التطبيق.'); }
+    e.target.value = '';
+    let data;
+    try { data = JSON.parse(await f.text()); }
+    catch { return alert(`تعذّرت قراءة «${f.name}».\n\nاختر ملف النسخة الاحتياطية الصادر من التطبيق (ينتهي بـ .daftar أو .json).`); }
+    if (data.app !== 'daftar-tahdeer')
+      return alert(`«${f.name}» ليس ملف نسخة من دفتر التحضير.`);
+    const when = (data.syncedAt || data.exportedAt || '').slice(0, 16).replace('T', ' ');
+    const n = (data.preps || []).length;
+    if (!confirm(`استيراد النسخة${when ? ' (' + when + ')' : ''} : ${ar(n)} تحضيراً.\n\n` +
+                 'سيُستبدل كلّ ما على هذا الجهاز. متابعة؟')) return;
+    await DB.restore(data);
+    location.reload();
   });
 }
 
