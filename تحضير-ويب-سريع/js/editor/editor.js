@@ -165,6 +165,9 @@ async function printCurrent(mode) {
   byId('printArea').innerHTML = '';
 
   if (mode === 'worksheet') {
+    /* لا نطبع ورقةً فيها سطرٌ واحد : المنهج لا يعرّف ورقة عمل لأيّ حصة بعد ،
+       فكان الزرّ يُخرج صفحةً بيضاء تُهدر. */
+    if (!s.worksheet) return alert('لا توجد ورقة عمل لهذه الحصة ـ لم يُعدّ لها محتوى بعد.');
     paper.innerHTML = worksheetHTML(s);
     paper.classList.remove('zoomed');
     forceA4();
