@@ -24,7 +24,10 @@ for (const k of ['DOMMatrix', 'Path2D', 'ImageData', 'DOMPoint'])
 
 const ROOT = path.join(__dirname, '..');
 const BOOKS = { '8': '8f1.pdf', '9': '9f1.pdf' };
-const BOOKDIR = path.resolve(ROOT, '..', '..');            // …/لتصميم تطبيق الويب
+/* كتب الطالب صارت داخل المشروع في «كتب/» بعد نقله من OneDrive. ونُبقي
+   الموضع القديم بديلاً ، فلا تتعطّل الأدوات على نسخةٍ لم تُنقل بعد. */
+const BOOKDIR = [path.resolve(ROOT, '..', 'كتب'), path.resolve(ROOT, '..', '..')]
+  .find(d => fs.existsSync(path.join(d, '9f1.pdf'))) || path.resolve(ROOT, '..', 'كتب');
 const IMG = path.join(ROOT, 'img');
 
 const PAGE_SHIFT = { '8': { printed: 124, big: 14 }, '9': { printed: 114, big: 15 } };
