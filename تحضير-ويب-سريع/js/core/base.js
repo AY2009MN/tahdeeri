@@ -60,10 +60,15 @@ const DB = (() => {
     clear:(store)       => tx(store, 'readwrite', s => s.clear(),      m => m.clear()),
 
     /** تصدير كل شيء إلى كائن واحد (ملف النقل). withBooks يضيف ملفات PDF. */
+    /* رمز الوصول يبقى على الجهاز ولا يخرج في أيّ نسخة : لا في المزامنة ولا في
+       ملفّ النقل ولا في النسخة الاحتياطية المنزَّلة. النزع هنا ، في المخرج
+       الوحيد لكلّ البيانات ، فلا ينساه مسارٌ جديد. */
     async dump(withBooks) {
+      const settings = JSON.parse(JSON.stringify(await this.all('settings')));
+      settings.forEach(s => { if (s.gh) delete s.gh.token; });
       const out = {
         app: 'daftar-tahdeer', version: VER, exportedAt: new Date().toISOString(),
-        settings: await this.all('settings'), sessions: await this.all('sessions'),
+        settings, sessions: await this.all('sessions'),
         preps: await this.all('preps'), assets: await this.all('assets'), overrides: await this.all('overrides')
       };
       if (withBooks) {
