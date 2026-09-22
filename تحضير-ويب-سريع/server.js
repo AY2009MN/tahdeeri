@@ -5,8 +5,8 @@ const http = require('http'), fs = require('fs'), path = require('path');
 try { require('./build/build-html.cjs')(); }
 catch (e) { console.error('تعذّر بناء index.html:', e.message); }
 const root = __dirname, PORT = +process.env.PORT || 8080;
-// التطبيق صار داخل مجلد فرعي في المستودع ، فمجلد الكتب أعلى بدرجتين (للتطوير المحلي فقط)
-const src = path.resolve(root, "..", "..");
+// جذر المشروع ـ منه يُقدَّم مجلد «كتب/» عبر ‎/__src/‎ (للتطوير المحلي فقط)
+const src = path.resolve(root, "..");
 const b64Cache = {};
 const types = {'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
   '.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8',
