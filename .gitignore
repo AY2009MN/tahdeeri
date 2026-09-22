@@ -21,3 +21,10 @@ desktop.ini
 # حزم أدوات الصيانة (sharp لضغط الصور) ـ ليست من التطبيق
 node_modules/
 package-lock.json
+
+# نسخ OneDrive المتضاربة ـ تُنشأ باسم الجهاز وتعود كلّما حُذفت
+*-AKN7CO1K7MJ2V.*
+*-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9].*
+# المنهج مكانه js/data/ ـ ما يظهر في js/ مباشرةً نسخةٌ قديمة أعادها OneDrive
+/تحضير-ويب-سريع/js/curriculum*.js
+/تحضير-ويب-سريع/js/bookmap.js

@@ -66,9 +66,12 @@ async function lockChange() {
 }
 
 /** أوّل تشغيل : الرقم الابتدائي ١٩٨٥ */
+/* يفتح التطبيق مفتوحاً : الدفتر أداةُ عملٍ يوميّة ، وإقفاله في كلّ مرّة كان
+   يوقف المعلّم أمام لمسةٍ لا تستجيب. القفل صار فعلاً مقصوداً : تقفله حين
+   تُناول جهازك غيرك ، ويبقى الرقم السرّي حارساً للمزامنة في كلّ الأحوال. */
 async function initLock() {
   if (!S.lockHash) { S.lockHash = await sha256('1985'); await DB.put('settings', S); }
-  LOCK.open = false;
+  LOCK.open = true;
   lockApply();
   bind('btnLock', 'onclick', lockToggle);
   bind('btnLockChange', 'onclick', lockChange);
