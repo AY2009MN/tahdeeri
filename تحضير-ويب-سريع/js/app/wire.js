@@ -51,9 +51,9 @@ function wireMorePanel() {
 
 /* ما يغيّر التحضير يمرّ بالقفل. الطباعة والتنقّل وتبديل العرض تبقى مفتوحةً
    دائماً ـ القفل يمنع التعديل لا التصفّح. */
-const ifUnlocked = fn => (...a) => LOCK.open
-  ? fn(...a)
-  : alert('التعديل مقفل ـ افتح القفل بالرقم السرّي أوّلاً.');
+const ifUnlocked = (fn, what) => async (...a) => {
+  if (await lockAsk(what || 'هذا الإجراء')) return fn(...a);
+};
 
 /** أزرار التنقّل والقوائم والطباعة */
 function wireEditorBar() {
@@ -63,18 +63,18 @@ function wireEditorBar() {
   bind('btnToday', 'onclick', () => openToday());
   bind('prevSes', 'onclick', () => gotoSession(-1));
   bind('nextSes', 'onclick', () => gotoSession(1));
-  bind('btnFit', 'onclick', ifUnlocked(fitToPages));
+  bind('btnFit', 'onclick', ifUnlocked(fitToPages, 'ضبط الصفحتين'));
   bind('btnPrint', 'onclick', () => printCurrent('sheet'));
   bind('btnBlank', 'onclick', printBlank);
-  bind('btnReset', 'onclick', ifUnlocked(resetSession));
+  bind('btnReset', 'onclick', ifUnlocked(resetSession, 'استعادة الأصل'));
   bind('btnWorksheet', 'onclick', () => printCurrent('worksheet'));
   bind('btnPrintWeek', 'onclick', printWeekSessions);
-  bind('btnStudio', 'onclick', ifUnlocked(() => openStudio('gallery')));
+  bind('btnStudio', 'onclick', ifUnlocked(() => openStudio('gallery'), 'استوديو الكتاب'));
   bind('btnViewMode', 'onclick', toggleViewMode);
   bind('imgFile', 'onchange', e => {
     const f = e.target.files[0];
     e.target.value = '';
-    if (f) ifUnlocked(insertImage)(f);
+    if (f) ifUnlocked(insertImage, 'إدراج صورة')(f);
   });
   bind('fsSel', 'onchange', e => { S.fontSize = +e.target.value; DB.put('settings', S); renderEditor(); });
 }

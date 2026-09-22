@@ -128,6 +128,8 @@ function flowShow(s) {
     if (m.box.scrollHeight > target) break;             // آخر سطر يتجاوز الحدّ يبقى في الأولى
   }
   if (fit.length === lines.length && lines.length > 2) fit.pop();   // اضمن سطراً للصفحة الثانية
+  // لا يبقى عنوانٌ آخرَ الصفحة الأولى وقد ذهب ما تحته إلى الثانية
+  while (fit.length > 1 && /^##/.test(fit[fit.length - 1])) fit.pop();
   m.done();
 
   b1.innerHTML = renderRich(fit.join('\n'));

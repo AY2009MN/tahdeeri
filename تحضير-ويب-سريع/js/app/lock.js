@@ -27,6 +27,19 @@ function lockApply() {
     : 'التعديل مقفل ـ أدخل الرقم السرّي لفتحه.');
 }
 
+/* المقفل كان يبتلع كلّ لمسة بلا ردّ : لا مؤشّر ولا تحديد ولا رسالة ، فيبدو
+   التطبيق معطّلاً. الآن أوّل محاولة تعديل تعرض الفتح في مكانها. */
+async function lockAsk(what) {
+  if (LOCK.open) return true;
+  const code = prompt(`«${what}» يحتاج فتح القفل.\n\nاكتب الرقم السرّي:`);
+  if (code === null) return false;
+  if (await sha256(code) !== S.lockHash) { alert('رقم غير صحيح.'); return false; }
+  LOCK.open = true;
+  lockApply();
+  toast('فُتح التعديل ✓');
+  return true;
+}
+
 async function lockToggle() {
   if (LOCK.open) { LOCK.open = false; return lockApply(); }
   const code = prompt('الرقم السرّي لفتح التعديل:');

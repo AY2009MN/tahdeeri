@@ -121,6 +121,10 @@
   #paper{padding:0;gap:0;display:flex!important;zoom:1!important}
   .tscroll{display:contents!important}
   #printArea{display:none!important}
+  /* ‎.view‎ تحجز أسفلها مكان شريط التنقّل (٧٢ بكسل على الهاتف) ، وهو مخفيّ في
+     الطباعة فتبقى الحجزة فراغاً يدفع صفحةً ثالثة بيضاء. تُلغى هنا. */
+  .view,#view-editor{padding:0!important;margin:0!important}
+  body.locked #paper::before{display:none!important}   /* لافتة القفل لا تُطبع */
 
   /* الهندسة الثابتة ـ تتجاوز وضع الشاشة */
   .sheet,.wsheet{box-shadow:none!important;margin:0;border-radius:0!important;

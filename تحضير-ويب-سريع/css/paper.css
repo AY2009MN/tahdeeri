@@ -205,3 +205,10 @@ body.locked #btnLock{background:#8a1f1f;color:#fff;border-color:#8a1f1f}
   border-radius:7px;font:700 15px/1 var(--font);cursor:pointer}
 .fmtbar button:hover{background:#e8eef7}
 .fmtbar i{width:1px;height:22px;background:#d5dbe5;margin:0 var(--sp-1)}
+
+/* علامة ظاهرة أنّ الدفتر مقفل ـ زرٌّ صغير في شريط لا يكفي ، فكان المعلّم
+   ينقر فلا يستجيب شيء ويظنّ العطل. اللمسة نفسها تعرض الفتح. */
+body.locked #paper::before{content:"🔒 الدفتر مقفل ـ المس أيّ موضع لفتحه";
+  display:block;text-align:center;font-size:var(--fs-sm);font-weight:700;
+  color:#8a1f1f;background:#fdeaea;border:1px solid #f2c2c2;border-radius:8px;
+  padding:6px 10px;margin:0 0 8px}

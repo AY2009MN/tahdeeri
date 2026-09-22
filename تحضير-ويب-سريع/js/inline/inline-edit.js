@@ -88,7 +88,11 @@ const inlLocked = () => typeof LOCK !== 'undefined' && !LOCK.open;
 /** النقر : موضع إدراج ، أو زرّ في الشريط ، أو تحديد صورة ، أو إلغاء التحديد */
 function wireInlineClick(paper) {
   paper.addEventListener('click', async e => {
-    if (inlLocked()) return inlDeselect();
+    if (inlLocked()) {
+      inlDeselect();
+      if (e.target.closest('.inl, .slot') && await lockAsk('تعديل الصور')) inlSelect(e.target.closest('.inl'));
+      return;
+    }
     const slot = e.target.closest('.slot');
     if (slot) {
       e.preventDefault();
@@ -200,7 +204,15 @@ function wireBoxClick() {
   const paper = byId('paper');
   if (!paper || paper.dataset.boxwired) return;
   paper.dataset.boxwired = '1';
-  paper.addEventListener('mousedown', e => {
+  paper.addEventListener('mousedown', async e => {
+    /* المقفل يُسأل أوّلاً : الصندوق يحمل contenteditable="false" وهو مقفل ،
+       فلو تركنا الحارس أدناه يسبق لخرجنا قبل أن نعرض الفتح. */
+    if (inlLocked()) {
+      if (!e.target.closest('.sheet')) return;
+      e.preventDefault();
+      await lockAsk('التعديل');
+      return;
+    }
     if (e.target.closest('.inl, .inlbar, .inlh, .slot, .hctl, [contenteditable]')) return;
     const wrap = e.target.closest('.sectwrap, .sect');
     const box = wrap && $('[contenteditable][data-f]', wrap);
