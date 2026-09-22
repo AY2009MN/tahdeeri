@@ -6,7 +6,8 @@
 
    القصّ يجري بمقياس ٢٫٦ (جودة الطباعة) وحدوده مأخوذة من تقطيعٍ بمقياس ١٫٥ ،
    وهو المقياس الذي تُرسم به ورقة التباين ـ فما تراه هو ما يُقصّ.          */
-const { renderPage, save } = require('./book.cjs');
+const fs = require('fs'), path = require('path');
+const { renderPage, save, IMG } = require('./book.cjs');
 const { textCols, fine } = require('./segment.cjs');
 const { createCanvas } = require('@napi-rs/canvas');
 
@@ -24,6 +25,11 @@ async function cut(g, printed, from, to, name, raw) {
   const c = textCols(hi), k = HIGH / LOW;
   const x0 = Math.max(0, c.x0 - PAD), x1 = Math.min(hi.w, c.x1 + PAD);
   const y0 = Math.max(0, Math.round(t * k) - PAD), y1 = Math.min(hi.h, Math.round(b * k) + PAD);
+
+  /* الكتابة فوق قصاصةٍ قائمة تدهسها صامتةً ـ وقد حدث ذلك مرّتين فظهرت صورةُ
+     عنوانٍ تحت عنوانٍ آخر. لا نكتب فوق موجود إلّا بـ --force. */
+  if (fs.existsSync(path.join(IMG, name)) && !process.argv.includes('--force'))
+    throw new Error(`«${name}» موجودة ـ اختر اسماً آخر أو أضِف --force`);
 
   const cv = createCanvas(x1 - x0, y1 - y0), cx = cv.getContext('2d');
   cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
