@@ -25,7 +25,7 @@
   ];
 
   const API = {
-    VERSION: '50',
+    VERSION: '51',
     STYLES, SCRIPTS,
     cssPaths: () => STYLES.map(f => `css/${f}.css`),
     jsPaths: () => SCRIPTS.map(f => `js/${f}.js`)
