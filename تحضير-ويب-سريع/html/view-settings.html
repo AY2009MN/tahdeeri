@@ -54,6 +54,19 @@
   </div>
   <p class="hint" id="genMsg"></p>
 
+  <h2>التخزين الشخصي 🔐</h2>
+  <p class="hint">اختر ملفّاً <b>واحداً</b> في أيّ مكانٍ تريده ـ مجلّد OneDrive أو Drive أو ذاكرة USB ـ
+     فيحفظ التطبيق عملك فيه بنقرة ، وتستعيده منه في أيّ جهاز. وإن كان المجلّد مزامَناً عندك
+     فالمزامنة بين أجهزتك تقع من نفسها : <b>لا وسيط ولا رمز وصول ولا شيء يخرج إلى أحد</b>.</p>
+  <p class="hint" id="storeInfo"></p>
+  <div class="toolbar">
+    <button class="btn primary" id="btnStoreSave">💾 احفظ في ملفّي</button>
+    <button class="btn" id="btnStoreLoad">↺ استعِد من ملفّي</button>
+    <button class="btn" id="btnStorePick">📁 اختر الملفّ</button>
+    <button class="btn" id="btnStoreForget">نسيان الملفّ</button>
+    <label class="btn sm" title="يحفظ بعد كل تعديل بمهلة قصيرة"><input type="checkbox" id="chkAutoStore"> حفظ تلقائي</label>
+  </div>
+
   <h2>قفل التعديل</h2>
   <p class="hint" id="lockState"></p>
   <div class="toolbar"><button class="btn" id="btnLockChange">تغيير الرقم السرّي</button></div>
@@ -75,8 +88,12 @@
   <p class="hint"><b>الرقم السرّي:</b> لا يخرج تعديل إلى الإنترنت ولا يُستبدل هذا الجهاز
      إلّا بالرقم السرّي ، يُسأل عنه في كلّ مرّة. وهو رقم القفل نفسه (<b>١٩٨٥</b> ابتداءً) ،
      تغيّره من «تغيير الرقم السرّي» أعلاه.</p>
-  <p class="hint"><b>مهمّ:</b> رمز الوصول يبقى على هذا الجهاز ولا يُرفع أبداً ـ يُنزع من البيانات قبل رفعها.
-     احصل عليه من GitHub ← Settings ← Developer settings ← Personal access tokens ، بصلاحية
-     <code>Contents: Read and write</code> على هذا المستودع وحده.
-     والمقصد الافتراضي مستودع <b>خاصّ</b> ـ إن غيّرته فتأكّد أنّ ما تضعه خاصّ لا عامّ.</p>
+  <p class="hint"><b>المزامنة اختيارية.</b> إن تركتَ «رمز الوصول» فارغاً فلا مزامنة ، ولا رمزَ على
+     الجهاز يمكن أن يتسرّب ـ وهو أسلم الأحوال. وطريقُ نقل عملك حينئذٍ هو
+     <b>«💾 نسخة احتياطية»</b> : ينزّل ملفّاً تنقله بنفسك ، وتستورده في الجهاز الآخر
+     من <b>«استيراد نسخة»</b> أعلاه.</p>
+  <p class="hint">وإن أردت المزامنة : احصل على الرمز من GitHub ← Settings ← Developer settings ←
+     Personal access tokens ، بصلاحية <code>Contents: Read and write</code> على هذا المستودع وحده.
+     الرمز يبقى على جهازك ولا يُرفع أبداً ـ يُنزع من البيانات قبل رفعها ومن كلّ نسخة احتياطية.
+     وانتبه: ما يُرفع يصير مقروءاً لمن يقرأ المستودع ، فاجعله <b>خاصّاً</b> إن كان ما فيه يخصّك.</p>
 </section>

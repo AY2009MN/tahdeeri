@@ -125,6 +125,7 @@ function markDirty(s) {
   const st = byId('saveState');
   if (st) { st.textContent = 'جارٍ الحفظ…'; st.classList.add('dirty'); }
   overflowSoon();                           // حارس التجاوز يتابع الكتابة لحظةً بلحظة
+  storeSoon();                              // حفظٌ تلقائي في ملفّك إن فعّلتَه
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     await DB.put('preps', prepCache[s.id]);

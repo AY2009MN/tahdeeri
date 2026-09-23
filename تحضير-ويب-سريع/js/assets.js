@@ -21,11 +21,11 @@
     'inline/inline', 'inline/inline-edit',
     'sheet/sheet', 'editor/layout', 'editor/standards', 'editor/editor',
     'studio/studio-shell', 'studio/studio-pdf', 'studio/studio-tools',
-    'views/views', 'app/lock', 'app/cloud', 'app/wire', 'app/boot'
+    'views/views', 'app/lock', 'app/cloud', 'app/store', 'app/wire', 'app/boot'
   ];
 
   const API = {
-    VERSION: '53',
+    VERSION: '54',
     STYLES, SCRIPTS,
     cssPaths: () => STYLES.map(f => `css/${f}.css`),
     jsPaths: () => SCRIPTS.map(f => `js/${f}.js`)

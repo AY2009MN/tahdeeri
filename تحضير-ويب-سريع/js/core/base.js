@@ -8,8 +8,8 @@
      overrides : تعديلات خطة الدروس فوق المنهج الأصلي
 */
 const DB = (() => {
-  const NAME = 'daftar_tahdeer', VER = 3;
-  const STORES = ['settings', 'sessions', 'preps', 'books', 'assets', 'overrides'];
+  const NAME = 'daftar_tahdeer', VER = 4;
+  const STORES = ['settings', 'sessions', 'preps', 'books', 'assets', 'overrides', 'handles'];
   let _db = null;
 
   /* مخزن احتياطي في الذاكرة:

@@ -108,6 +108,7 @@ async function start() {
   wireSaveGuard();
   await initLock();
   wireSync();
+  wireStore();
   wireBackup();
   applyViewMode();
 
