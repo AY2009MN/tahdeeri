@@ -19,13 +19,13 @@
     'core/base', 'core/state', 'data/plan', 'data/schedule',
     'figs/image-fx', 'figs/figs',
     'inline/inline', 'inline/inline-edit',
-    'sheet/sheet', 'editor/layout', 'editor/editor',
+    'sheet/sheet', 'editor/layout', 'editor/standards', 'editor/editor',
     'studio/studio-shell', 'studio/studio-pdf', 'studio/studio-tools',
     'views/views', 'app/lock', 'app/cloud', 'app/wire', 'app/boot'
   ];
 
   const API = {
-    VERSION: '51',
+    VERSION: '52',
     STYLES, SCRIPTS,
     cssPaths: () => STYLES.map(f => `css/${f}.css`),
     jsPaths: () => SCRIPTS.map(f => `js/${f}.js`)

@@ -181,3 +181,22 @@ input[type=checkbox]{min-height:0}
 
 /* زرّ «المزيد» ظاهرٌ دائماً ، فالأدوات الثانوية مطويّة على كلّ المقاسات */
 .btn-more{display:inline-flex}
+
+/* ── بنك المعايير ومؤشرات الأداء ── */
+.stdpanel{display:none;position:fixed;inset-inline-end:var(--sp-3);bottom:var(--sp-3);z-index:60;
+  width:min(440px,calc(100vw - 2*var(--sp-3)));max-height:min(70vh,560px);overflow:auto;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-2);
+  box-shadow:var(--sh-3);padding:var(--sp-2)}
+.stdpanel.open{display:block}
+.std-head{display:flex;gap:var(--sp-1);align-items:center;margin-bottom:var(--sp-1)}
+.std-hint{margin:0 0 var(--sp-1);font-size:.82rem;color:var(--muted)}
+.std-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.std-list li{display:flex;gap:8px;align-items:flex-start;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--r-1);padding:6px 8px;line-height:1.5}
+.std-list li:hover{background:var(--hover)}
+.std-list li.on{background:#eaf4ff;border-color:#1b4c8c66}
+.std-list li.empty{cursor:default;color:var(--muted);justify-content:center}
+.std-list .tick{flex:0 0 1.2em;font-weight:700;color:#1b4c8c}
+.std-list .txt{flex:1}
+.std-list .x{border:0;background:transparent;color:var(--red);cursor:pointer;font-size:1rem;padding:0 2px}
+.std-foot{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-2)}

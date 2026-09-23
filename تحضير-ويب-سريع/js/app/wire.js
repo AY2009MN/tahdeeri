@@ -98,6 +98,7 @@ function wireEditorBar() {
   bind('btnStudio', 'onclick', ifUnlocked(() => openStudio('gallery'), 'استوديو الكتاب'));
   // قصٌّ مباشر : يفتح العارض على صفحات درس الحصة نفسها ، فأداة الإطار جاهزة
   bind('btnCut', 'onclick', ifUnlocked(() => openStudio('pdf'), 'القصّ من الكتاب'));
+  bind('btnStd', 'onclick', ifUnlocked(openStdPanel, 'تعديل المعايير'));
   bind('btnViewMode', 'onclick', toggleViewMode);
   bind('imgFile', 'onchange', e => {
     const f = e.target.files[0];
