@@ -148,6 +148,17 @@ function confirmIfClipped(stuck) {
     'موافق : اطبع كما هو.\nإلغاء : أعود لأحذف عنصراً أو أنقله إلى «تابع العرض».');
 }
 
+/* حارسٌ أخير : عدد الصفحات التي ستخرج فعلاً = ارتفاع الورقة ÷ ارتفاع A4.
+   يُقاس #paper وحده ـ لا #view-editor ـ فالشريطان لا يُطبعان ، وإدخالهما في
+   القياس كان يمنع طباعةً سليمة. ولا يصحّ إلّا بعد forceA4 وإزالة التصغير. */
+function pagesBeyondTwo(expected) {
+  const A4 = 297 * 96 / 25.4;
+  const paper = byId('paper');
+  const h = Math.max(paper.scrollHeight, paper.getBoundingClientRect().height);
+  const sheets = $$('#paper .sheet, #paper .wsheet').length || expected;
+  return Math.max(0, Math.ceil(h / A4 - 0.04) - Math.max(expected, sheets));
+}
+
 /** يفرض هندسة A4 على الشاشة قبل الطباعة ، فتتطابق المعاينة والمخرج */
 function forceA4() {
   document.body.classList.remove('screenmode');
@@ -179,6 +190,12 @@ async function printCurrent(mode) {
   renderEditor();
   const { stuck } = await preparePrint(paper);
   if (!confirmIfClipped(stuck)) return afterPrint(false);
+  const extra = pagesBeyondTwo(2);
+  if (extra) {
+    alert(`تنبيه: الورقة ستخرج في ${ar(2 + extra)} صفحات لا صفحتين.\n\n` +
+          'أُلغيت الطباعة لئلّا تُهدر ورقة. أبلِغ بهذا ـ فهو خلل في القالب لا في تحضيرك.');
+    return afterPrint(false);
+  }
   window.print();
   afterPrint(false);
 }

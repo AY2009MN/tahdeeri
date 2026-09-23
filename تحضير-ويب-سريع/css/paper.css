@@ -151,6 +151,15 @@ body.screenmode .logobox img{max-height:64px}
   border-radius:0!important}
 #printArea .sheet>.sect.grow{flex:1 1 0!important;min-height:0!important}
 #printArea .sheet::before{display:none!important}
+/* نسخة القياس تُقاس كما تُطبع ولو كان المعروض «وضع الشاشة» ، وإلّا أنذرت
+   بتجاوزٍ لا وجود له في الورقة المطبوعة */
+body.screenmode #printArea .sectwrap,body.screenmode #printArea .sectbox{
+  min-height:14mm;overflow:hidden}
+body.screenmode #printArea .sectwrap.lines,body.screenmode #printArea .sectbox.lines{
+  max-height:calc(4 * 1.6em + 6mm)}
+body.screenmode #printArea .sectwrap.lines:has(.inl),
+body.screenmode #printArea .sectwrap.lines:has(.figs){max-height:none}
+body.screenmode #printArea{padding:0;gap:0}
 
 /* ── قفل التعديل ── */
 body.locked #paper [contenteditable]{cursor:default;background:transparent}

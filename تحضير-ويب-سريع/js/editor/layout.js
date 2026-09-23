@@ -52,25 +52,62 @@ function zoomPaper() {
 }
 
 /** تنبيه بصري عند تجاوز المحتوى ارتفاع الصندوق ، مع بيان حالة الطباعة */
+/* يعدّ الصناديق الممتلئة بمقاس A4 الحقيقيّ ـ ولو كان المعروض «وضع الشاشة».
+   ‎#printArea‎ ورقةٌ بمقاس A4 دائماً ، فنرسم فيها نسخةً ونقيس عليها. وبهذا
+   يرى المعلّم تحذير التجاوز وهو يكتب على الهاتف ، لا بعد الطباعة. */
+function countFullBoxes(root) {
+  let n = 0;
+  $$('.sectwrap, .sectbox:not(.nb)', root).forEach(b => {
+    if (b.scrollHeight > b.clientHeight + 4) n++;
+  });
+  return n;
+}
+
+async function overflowInA4() {
+  const s = curSession(); if (!s) return 0;
+  const host = byId('printArea');
+  // مقاس الخطّ موضوعٌ على ‎#paper‎ نفسه ، فلولا نقله لقيست النسخة بخطٍّ آخر
+  host.style.setProperty('--sheetfs', (S.fontSize || 14) + 'px');
+  host.innerHTML = $('#paper').innerHTML;                 // ما يراه المعلّم الآن
+  await hydrateAssets(host);
+  await imagesReady(host, 900);
+  fitAllBoxes(false, host);                               // كما يجري قبل الطباعة تماماً
+  const n = countFullBoxes(host);
+  host.innerHTML = '';
+  return n;
+}
+
 function checkOverflow() {
-  if (effectiveMode() === 'screen') {
-    setText('pagesInfo', 'وضع الشاشة ـ الطباعة تخرج بمقاس A4');
-    byId('pagesInfo')?.classList.remove('dirty');
+  const info = byId('pagesInfo');
+  const screen = effectiveMode() === 'screen';
+  let over = 0;
+  if (!screen) {
+    $$('#paper .sectwrap, #paper .sectbox:not(.nb)').forEach(b => {
+      const bad = b.scrollHeight > b.clientHeight + 4;
+      if (bad) over++;
+      b.classList.toggle('overflowwarn', bad);
+    });
+  } else {
+    // في وضع الشاشة تتمدّد الصناديق ، فنقيس على نسخةٍ بمقاس A4
+    overflowInA4().then(n => {
+      if (!info) return;
+      info.textContent = n
+        ? `⚠ ${ar(n)} صندوقاً يتجاوز الصفحة ـ ما زاد لن يُطبع`
+        : 'وضع الشاشة ـ الطباعة صفحتان A4 ✓';
+      info.classList.toggle('dirty', !!n);
+    });
     return;
   }
-  let over = 0;
-  $$('#paper .sectwrap, #paper .sectbox:not(.nb)').forEach(b => {
-    const bad = b.scrollHeight > b.clientHeight + 4;
-    if (bad) over++;
-    b.classList.toggle('overflowwarn', bad);
-  });
-  const info = byId('pagesInfo');
   if (!info) return;
   info.textContent = over
-    ? `تنبيه: ${ar(over)} صندوقاً ممتلئاً ـ صغّر صورة أو انقلها إلى الصفحة الثانية`
-    : 'الطباعة مطابقة للمعاينة ـ صفحتان';
+    ? `⚠ ${ar(over)} صندوقاً يتجاوز الصفحة ـ صغّر صورة أو انقلها إلى «تابع العرض»`
+    : 'الطباعة مطابقة للمعاينة ـ صفحتان ✓';
   info.classList.toggle('dirty', over > 0);
 }
+
+/* فحصٌ مؤجَّل يُستدعى من markDirty عند كلّ تعديل ، فيرى المعلّم التجاوز وهو
+   يكتب لا بعد الطباعة. مؤجَّلٌ لأنّ قياس النسخة A4 أثقل من أن يجري كلّ حرف. */
+const overflowSoon = debounce(() => { if (curSession()) checkOverflow(); }, 500);
 
 window.addEventListener('resize', debounce(() => { applyViewMode(); checkOverflow(); }, 150));
 
@@ -170,10 +207,45 @@ function fitOneBox(w, persist) {
   return 'ok';
 }
 
+/* آخرُ ما يُحاوَل : إن بقي «العرض» ممتلئاً بعد تصغير الصور ، فالنصّ نفسه هو
+   الفائض ـ لا الصور. نُنزل آخر عناصره إلى «تابع العرض» في الصفحة الثانية
+   عنصراً عنصراً حتى يتّسع ، فلا يُقصّ سطرٌ في الطباعة من غير أن يدري أحد.
+   (قياس flowShow يجري قبل تحميل الصور ، فلا يرى ارتفاعها ـ وهذا تصحيحه) */
+function reflowOverflow(persist, scope) {
+  const root = scope || byId('paper');
+  const b1 = $('.sectbox[data-f="show"]', root);
+  const b2 = $('.sectbox[data-f="show2"]', root);
+  if (!b1 || !b2) return 0;
+  const w = b1.closest('.sectwrap') || b1;
+  const over = () => b1.scrollHeight > b1.clientHeight + 2 || w.scrollHeight > w.clientHeight + 2;
+  let moved = 0;
+  const w2 = b2.closest('.sectwrap') || b2;
+  const over2 = () => b2.scrollHeight > b2.clientHeight + 2 || w2.scrollHeight > w2.clientHeight + 2;
+  /* لا نحلّ ضيق الصفحة الأولى بإغراق الثانية : إن فاضت هي الأخرى رددنا العنصر ،
+     فيبقى الفائض حيث تنفع معه الصور تصغيراً ، ويبقى التحذير صادقاً. */
+  while (over() && b1.children.length > 1 && moved < 60) {
+    const el = b1.lastElementChild;
+    b2.insertBefore(el, b2.firstChild);
+    if (over2()) { b1.appendChild(el); break; }
+    moved++;
+  }
+  /* والعكس : إن فاض «تابع العرض» والصفحة الأولى فيها متّسع ، رفعنا إليها أوّل
+     عناصره ـ فالقسمة الأولى تقع قبل تحميل الصور فتُثقل الثانية بلا داعٍ. */
+  while (over2() && b2.children.length > 1 && moved < 60) {
+    const el = b2.firstElementChild;
+    b1.appendChild(el);
+    if (over()) { b2.insertBefore(el, b2.firstChild); break; }   // لا متّسع ـ نردّه
+    moved++;
+  }
+  if (moved && persist) [b1, b2].forEach(b => b.dispatchEvent(new Event('input', { bubbles: true })));
+  return moved;
+}
+
 /** يمرّ على صناديق الورقة ويعيد {fixed, stuck} */
-function fitAllBoxes(persist) {
+function fitAllBoxes(persist, scope) {
+  const root = scope || byId('paper');
   let fixed = 0, stuck = 0;
-  $$('#paper .sectwrap').forEach(w => {
+  $$('.sectwrap', root).forEach(w => {
     const r = fitOneBox(w, persist);
     if (r === 'ok') fixed++;
     if (r === 'stuck') stuck++;
@@ -182,6 +254,10 @@ function fitAllBoxes(persist) {
       if (box) box.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
+  if (stuck && reflowOverflow(persist, root)) {    // نزلَ الفائض إلى الصفحة الثانية
+    stuck = 0;
+    $$('.sectwrap', root).forEach(w => { if (w.scrollHeight > w.clientHeight + 2) stuck++; });
+  }
   return { fixed, stuck };
 }
 
