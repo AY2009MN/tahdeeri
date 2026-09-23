@@ -131,10 +131,22 @@ input[type=checkbox]{min-height:0}
 .stickybar{position:sticky;top:var(--topbar-h);z-index:15;background:var(--bg);
   margin:0;padding:var(--sp-2) var(--sp-3);border-bottom:1px solid #dde3ec}
 
-/* ── مجموعات شريط المحرّر ── */
-.tb-nav{display:flex;gap:var(--sp-1);align-items:center;flex:1;min-width:0}
+/* ── مجموعات شريط المحرّر ──
+   التنقّل بين الحصص أكثر ما يُلمس ، فسهماه دائرتان واضحتان لا زرّان صغيران
+   يضيعان بين بقيّة الأزرار ، واسم الحصة بينهما في إطارٍ يجمعهما. */
+.tb-nav{display:flex;gap:var(--sp-2);align-items:center;flex:1 1 100%;min-width:0;
+  background:#fff;border:1px solid #dde3ec;border-radius:var(--r-2);padding:4px 6px}
+.navarrow{width:40px;height:40px;flex:0 0 40px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--blue);background:var(--blue);color:#fff;
+  font-size:24px;line-height:1;font-weight:700;display:grid;place-items:center}
+.navarrow:hover:not(:disabled){background:var(--blue-d);border-color:var(--blue-d)}
+.navarrow:disabled{background:#eef2f7;color:#9aa7b6;border-color:#dde3ec;cursor:default}
 .ses-label{font-weight:700;font-size:14px;flex:1;min-width:0;text-align:center;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* الشريط سطران لا أكثر على كلّ المقاسات : التنقّل أعلاه ، وتحته الأساسيّ
+   وحده. وما عداه (المعلَّم foldable) يسكن لوحة «⋯ المزيد» ـ كان يُعرض كلّه
+   على الشاشات العريضة فيلتفّ على ثلاثة صفوف ويضيع فيها المهمّ. */
+#editorBar .foldable{display:none}
 .tb-status{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;min-width:0}
 .savestate{font-size:var(--fs-xs);color:var(--green);white-space:nowrap}
 .savestate.dirty{color:#b06f00}
@@ -167,5 +179,5 @@ input[type=checkbox]{min-height:0}
 .more-row .pick select{flex:1 1 140px;max-width:none;min-height:var(--tap)}
 .more-row .fs{color:var(--ink);font-size:14px;justify-content:space-between}
 
-/* زرّ «المزيد» ـ لا يظهر إلا حين تُطوى الأدوات */
-.btn-more{display:none}
+/* زرّ «المزيد» ظاهرٌ دائماً ، فالأدوات الثانوية مطويّة على كلّ المقاسات */
+.btn-more{display:inline-flex}

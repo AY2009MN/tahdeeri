@@ -55,12 +55,38 @@ const ifUnlocked = (fn, what) => async (...a) => {
   if (await lockAsk(what || 'هذا الإجراء')) return fn(...a);
 };
 
+/** «لم تُعطَ الحصة» : يسأل عن موعدها الجديد وينزاح ما بعدها */
+async function askMoveSession() {
+  const c = curClass(), s = curSession();
+  if (!c || !s) return;
+  const next = (classDates[c.id] || []).slice(curIdx + 1).find(d => d)?.date;
+  const ans = prompt(
+    `${s.code} ${s.title} ـ الحصة ${ar(s.partIdx)}\n` +
+    `موعدها الآن : ${s.date || '—'}\n\n` +
+    'اكتب الموعد الجديد (سنة-شهر-يوم) ، ويُزاح ما بعدها تبعاً :',
+    next || s.date || '');
+  if (ans === null) return;
+  const d = ans.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return alert('اكتب التاريخ هكذا : 2026-10-05');
+  if (s.date && d <= s.date) return alert('الموعد الجديد يجب أن يكون بعد الموعد الحالي.');
+  const err = await moveSession(c, curIdx, d);
+  if (err) return alert(err);
+  renderEditor();
+}
+
 /** أزرار التنقّل والقوائم والطباعة */
 function wireEditorBar() {
   bind('unitSel', 'onchange', e => { curIdx = firstSessionWhere(s => s.unitNo === e.target.value); renderEditor(); });
   bind('lessonSel', 'onchange', e => { curIdx = firstSessionWhere(s => s.code === e.target.value); renderEditor(); });
   bind('partSel', 'onchange', e => { curIdx = +e.target.value; renderEditor(); });
   bind('btnToday', 'onclick', () => openToday());
+  bind('btnDate', 'onclick', ifUnlocked(askMoveSession, 'تأجيل الحصة'));
+  bind('btnClearMoves', 'onclick', ifUnlocked(async () => {
+    const c = curClass();
+    if (!c || !(c.gaps || []).length) return alert('لا تأجيلات على هذه الشعبة.');
+    if (!confirm(`إلغاء ${ar((c.gaps || []).length)} تأجيلاً وإعادة التوزيع من أوّل الفصل؟`)) return;
+    await clearMoves(c);
+  }, 'إلغاء التأجيلات'));
   bind('prevSes', 'onclick', () => gotoSession(-1));
   bind('nextSes', 'onclick', () => gotoSession(1));
   bind('btnFit', 'onclick', ifUnlocked(fitToPages, 'ضبط الصفحتين'));

@@ -3,27 +3,61 @@
    مع تخطّي الجمعة والسبت والعطل. أيّ تعديل في التاريخ أو الجدول أو العطل
    يعيد التوزيع كاملاً فوراً ـ بلا حاجة إلى زرّ. */
 
-function computeDates() {
+/** كلّ مواعيد الشعبة في الفصل بالترتيب ، قبل أن تُسنَد إليها الحصص */
+function classSlots(c) {
   const hol = new Set(S.holidays.map(h => h.date));
-  const startAll = parseISO(S.start), endAll = parseISO(S.end);
+  const slots = (c.tt || []).slice().sort((a, b) => a.d - b.d || a.p - b.p);
+  const out = [];
+  if (!slots.length) return out;
+  const end = parseISO(S.end);
+  const d = new Date(parseISO(S.start));
+  const cap = sessionsIdx[c.g].length + 60;          // فائضٌ يتّسع للتأجيلات
+  while (out.length < cap && d <= end) {
+    const wd = d.getDay();
+    if (wd !== 5 && wd !== 6 && !hol.has(iso(d)))
+      for (const sl of slots.filter(x => x.d === wd)) out.push({ date: iso(d), period: sl.p });
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+
+/* التأجيل : حصةٌ لم تُعطَ يُترك موعدها فارغاً وتنزاح هي وما بعدها موعداً
+   واحداً. تُحفظ مواضع المواعيد المتروكة في ‎c.gaps‎ ، فيبقى التوزيع محسوباً
+   لا مكتوباً ـ وأيّ تعديل في الجدول أو العطل يعيد حسابه صحيحاً. */
+function computeDates() {
   const report = {};
   for (const c of S.classes) {
-    const slots = (c.tt || []).slice().sort((a, b) => a.d - b.d || a.p - b.p);
+    const slots = classSlots(c);
+    const gaps = new Set(c.gaps || []);
     const total = sessionsIdx[c.g].length;
     const out = classDates[c.id] = [];
-    const d = new Date(startAll);
-    while (slots.length && out.length < total && d <= endAll) {
-      const wd = d.getDay();
-      if (wd !== 5 && wd !== 6 && !hol.has(iso(d)))
-        for (const sl of slots.filter(x => x.d === wd)) {
-          if (out.length >= total) break;
-          out.push({ date: iso(d), period: sl.p });
-        }
-      d.setDate(d.getDate() + 1);
-    }
+    for (let i = 0; i < slots.length && out.length < total; i++)
+      if (!gaps.has(i)) out.push(slots[i]);
     report[c.id] = out.length;
   }
   return report;
+}
+
+/** ينقل حصةً إلى موعدٍ لاحق ، وينزاح ما بعدها تبعاً. يعيد رسالةً أو '' */
+async function moveSession(c, sesIdx, newDate) {
+  const slots = classSlots(c);
+  const gaps = new Set(c.gaps || []);
+  const live = [];                                   // المواعيد المستعملة فعلاً
+  for (let i = 0; i < slots.length; i++) if (!gaps.has(i)) live.push(i);
+  const cur = live[sesIdx];
+  if (cur === undefined) return 'هذه الحصة بلا موعد ـ وسّع مدى الفصل أوّلاً.';
+  const target = slots.findIndex((s, i) => i >= cur && s.date === newDate);
+  if (target < 0) return `لا حصة لهذه الشعبة يوم ${newDate} ـ اختر يوماً من أيّام جدولها بعد موعدها الحالي.`;
+  for (let i = cur; i < target; i++) gaps.add(i);    // المواعيد المتروكة
+  c.gaps = [...gaps].sort((a, b) => a - b);
+  await regenerateAll(`أُجّلت الحصة إلى ${newDate} وانزاح ما بعدها`);
+  return '';
+}
+
+/** يلغي كلّ التأجيلات لشعبة ويعيد التوزيع من أوّله */
+async function clearMoves(c) {
+  delete c.gaps;
+  await regenerateAll('أُلغيت التأجيلات وأُعيد التوزيع');
 }
 
 /** تطبيق تواريخ الشعبة المختارة على حصص صفّها */

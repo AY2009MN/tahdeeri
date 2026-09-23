@@ -10,10 +10,10 @@
 <meta name="description" content="دفتر تحضير الرياضيات ـ الصفّان الثامن والتاسع">
 <!-- التنسيق كبسولات : الرموز ، الأساس ، الهيكل ، العروض ، الورقة ، المحتوى ،
      الصور ، الاستوديو ، التجاوب ، الطباعة. تُدرج آلياً من قائمة js/assets.js -->
-<link rel="stylesheet" href="css/base.css?v=46">
-<link rel="stylesheet" href="css/paper.css?v=46">
-<link rel="stylesheet" href="css/images.css?v=46">
-<link rel="stylesheet" href="css/responsive.css?v=46">
+<link rel="stylesheet" href="css/base.css?v=47">
+<link rel="stylesheet" href="css/paper.css?v=47">
+<link rel="stylesheet" href="css/images.css?v=47">
+<link rel="stylesheet" href="css/responsive.css?v=47">
 </head>
 <body>
 
@@ -63,11 +63,13 @@
 <section id="view-editor" class="view hidden">
   <div class="toolbar stickybar no-print" id="editorBar">
     <span class="tb-nav">
-      <button class="btn" id="prevSes" title="الحصة السابقة" aria-label="الحصة السابقة">‹</button>
+      <button class="navarrow" id="prevSes" title="الحصة السابقة" aria-label="الحصة السابقة">‹</button>
       <span id="sesLabel" class="ses-label"></span>
-      <button class="btn" id="nextSes" title="الحصة التالية" aria-label="الحصة التالية">›</button>
+      <button class="navarrow" id="nextSes" title="الحصة التالية" aria-label="الحصة التالية">›</button>
     </span>
     <button class="btn primary" id="btnStudio" title="صور الكتاب : معرض الدرس وصفحات PDF">📷 استوديو الكتاب</button>
+    <button class="btn primary" id="btnPrint">🖨 طباعة</button>
+    <button class="btn" id="btnDate" title="لم تُعطَ الحصة؟ أجّلها ـ وينزاح ما بعدها تلقائياً">🗓 تأجيل</button>
     <button class="btn" id="btnBackupBar" title="ينزّل نسخة من عملك ، ويرفعها إلى GitHub إن كان مضبوطاً">💾 نسخة احتياطية</button>
     <button class="btn" id="btnMore">⋯ المزيد</button>
 
@@ -88,8 +90,8 @@
     <label class="btn sm foldable" data-more="كتابة يدوية للتاريخ والصف" title="عدم طباعة التاريخ والصف والحصة لتُكتب بخط اليد"><input type="checkbox" id="chkManualMeta"> كتابة يدوية للتاريخ</label>
     <button class="btn foldable" id="btnBlank" data-more="طباعة نموذج فارغ" title="نموذج تحضير فارغ يُكتب بخطّ اليد">نموذج فارغ</button>
     <button class="btn foldable" id="btnReset" data-more="↺ استعادة نصّ الدرس الأصلي" title="يمحو تعديلاتك على هذه الحصة ويعيد نصّ المنهج">↺ استعادة الأصل</button>
+    <button class="btn foldable" id="btnClearMoves" data-more="إلغاء كلّ التأجيلات" title="يعيد توزيع التواريخ من أوّل الفصل بلا تأجيل">↩ إلغاء التأجيلات</button>
 
-    <button class="btn primary" id="btnPrint">🖨 طباعة</button>
     <span class="spacer"></span>
     <span class="tb-status">
       <span id="saveState" class="savestate">محفوظ</span>

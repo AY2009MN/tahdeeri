@@ -24,8 +24,6 @@
 
   /* شريط المحرّر : صفّان لا أكثر ـ عنوان الحصة أعلاه ، والأدوات تحته ،
      وما زاد يُطوى في لوحة «المزيد». */
-  .btn-more{display:inline-flex}
-  #editorBar .foldable{display:none}
   #editorBar{gap:var(--sp-1);padding:6px var(--sp-2)}
   #editorBar .btn{padding:7px 10px}
   #editorBar .tb-nav{flex:1 0 100%;order:-1}
