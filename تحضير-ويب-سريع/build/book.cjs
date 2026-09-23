@@ -36,9 +36,14 @@ const pdfPageFromPrinted = (p, g) => {
   return Math.max(1, p + (k && p >= k.printed ? k.big : 1));
 };
 
+/* نسخة pdf.js المرفقة في vendor/ هي نفسها التي يعمل بها التطبيق ، فنستعملها هنا
+   أيضاً : أداةٌ واحدة لا تحتاج تثبيت حزمةٍ خارجية ، ولا تختلف عمّا يراه المعلّم.
+   (كانت تستورد pdfjs-dist فتتعطّل كلّما نُظّف node_modules) */
 let pdfjs;
 async function lib() {
-  return pdfjs || (pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs'));
+  if (pdfjs) return pdfjs;
+  const url = require('url').pathToFileURL(path.join(__dirname, '..', 'vendor', 'pdf.mjs'));
+  return pdfjs = await import(url.href);
 }
 
 const docs = {};
