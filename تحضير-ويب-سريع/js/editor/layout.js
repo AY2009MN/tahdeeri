@@ -183,28 +183,30 @@ function flowShow(s) {
      المعلّم ـ وهي علّة كانت تصيب أكثر صفحات المنهج الجاهزة.
    • ضبط يدوي (fitToPages) : يثبّت العروض الجديدة في التحضير نفسه. */
 
-/** يصغّر صور صندوق واحد حتى يتّسع. يعيد 'ok' أو 'stuck' أو 'skip' */
+/** يصغّر صور صندوق واحد حتى يتّسع. يعيد 'ok' أو 'stuck' أو 'skip'.
+    مسحٌ تنازلي لا بحثٌ ثنائي : الصور تُرصف بجانب بعضها ، فتضييقها قد يدفع
+    صورةً إلى سطرٍ جديد فيزيد الارتفاع بدل أن ينقص ـ والمنحنى ليس مطّرداً ،
+    فالبحث الثنائي كان يحكم بالعجز لأنّ أصغر حجمٍ وحده لم يكفِ. */
 function fitOneBox(w, persist) {
   const inls = $$('.inl', w);
-  const over = () => w.scrollHeight > w.clientHeight + 2;
-  if (!over()) return 'skip';
+  const gap = () => w.scrollHeight - w.clientHeight;
+  if (gap() <= 2) return 'skip';
   if (!inls.length) return 'stuck';
 
   const base = inls.map(sp => +sp.dataset.w || parseFloat(sp.style.width) || 90);
   const apply = f => inls.forEach((sp, i) =>
     sp.style.width = Math.max(18, base[i] * f).toFixed(1) + '%');
 
-  let lo = 0.25, hi = 1;
-  apply(lo);
-  if (over()) return 'stuck';                       // حتى أصغر حجم لا يكفي
-  for (let i = 0; i < 10; i++) {
-    const mid = (lo + hi) / 2;
-    apply(mid);
-    if (over()) hi = mid; else lo = mid;
+  let best = 1, least = Infinity, ok = false;
+  for (let f = 0.95; f >= 0.25; f -= 0.05) {
+    apply(f);
+    const d = gap();
+    if (d <= 2) { best = f; ok = true; break; }      // أوّل حجمٍ يتّسع هو أكبرها
+    if (d < least) { least = d; best = f; }          // وإلّا أقلّها تجاوزاً
   }
-  apply(lo);
+  apply(best);
   if (persist) inls.forEach(sp => { sp.dataset.w = Math.round(parseFloat(sp.style.width)); });
-  return 'ok';
+  return ok ? 'ok' : 'stuck';
 }
 
 /* آخرُ ما يُحاوَل : إن بقي «العرض» ممتلئاً بعد تصغير الصور ، فالنصّ نفسه هو
@@ -226,7 +228,8 @@ function reflowOverflow(persist, scope) {
   while (over() && b1.children.length > 1 && moved < 60) {
     const el = b1.lastElementChild;
     b2.insertBefore(el, b2.firstChild);
-    if (over2()) { b1.appendChild(el); break; }
+    // إن ضاقت الثانية بما نزل إليها صغّرنا صورها لتتّسع ، فإن عجزت رددناه
+    if (over2() && fitOneBox(w2, persist) !== 'ok') { b1.appendChild(el); break; }
     moved++;
   }
   /* والعكس : إن فاض «تابع العرض» والصفحة الأولى فيها متّسع ، رفعنا إليها أوّل
