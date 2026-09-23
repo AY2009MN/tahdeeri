@@ -3,7 +3,10 @@
    وكتابته ، ونزع رمز الوصول قبل الرفع. أمّا متى نرفع ونجلب ـ ومن يأذن بذلك ـ
    ففي js/app/sync.js. */
 
-const DEFAULT_REPO = 'AY2009MN/tahdeeri-data';
+/* مستودع واحد للتطبيق وبياناته : AY2009MN/tahdeeri ، وهو عامّ.
+   كان للبيانات مستودعٌ ثانٍ خاصّ (tahdeeri-data) فحُذف ـ مستودعان لشيءٍ
+   واحد تشتيتٌ بلا فائدة ، ولم يُستعمل الثاني قطّ. */
+const DEFAULT_REPO = 'AY2009MN/tahdeeri';
 
 const GH = {
   get cfg() {
@@ -136,15 +139,18 @@ async function askSecret(action) {
   return true;
 }
 
-/** المستودع العامّ يراه الناس ، والمزامنة ترفع التحضيرات وصور الكتاب.
-    فلا يُرفع إليه إلّا بإقرار صريح ـ لا بسهو في خانة اسم المستودع. */
+/** المستودع العامّ يراه الناس. يُستأذن مرّةً واحدة لكلّ مستودع ، ويُحفظ
+    الإقرار ـ فلا يُسأل المعلّم في كلّ رفع عمّا اختاره أصلاً. */
 async function confirmPublic() {
   const info = await GH.info();
   if (!info || info.private) return true;
-  return confirm(
-    `تنبيه: المستودع «${GH.cfg.repo}» عامّ ـ يراه أيّ أحد على الإنترنت.\n\n` +
+  if ((S.gh || {}).publicOk === GH.cfg.repo) return true;
+  const ok = confirm(
+    `المستودع «${GH.cfg.repo}» عامّ ـ يراه أيّ أحد على الإنترنت.\n\n` +
     'سيُنشر ما ترفعه : تحضيراتك وصور الكتاب المدرجة فيها.\n\n' +
-    'موافق : ارفع على كلّ حال.\nإلغاء : أعود لأضع مستودعاً خاصّاً.');
+    'موافق : ارفع ، ولا أسألك عن هذا المستودع مرّةً أخرى.\nإلغاء : لا ترفع.');
+  if (ok) { S.gh = { ...(S.gh || {}), publicOk: GH.cfg.repo }; await DB.put('settings', S); }
+  return ok;
 }
 
 async function syncPush() {
@@ -188,6 +194,11 @@ async function syncPull() {
 }
 
 function wireSync() {
+  // جهازٌ أُعدّ على المستودع المحذوف يُحوَّل إلى الواحد الباقي
+  if ((S.gh || {}).repo === 'AY2009MN/tahdeeri-data') {
+    S.gh = { ...S.gh, repo: DEFAULT_REPO };
+    DB.put('settings', S);
+  }
   const g = S.gh || {};
   setVal('ghRepo', g.repo || DEFAULT_REPO);
   setVal('ghBranch', g.branch || 'main');
